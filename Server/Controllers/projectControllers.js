@@ -57,4 +57,46 @@ const postProjects = async (req, res) => {
     }
   };
 
-module.exports = {getProjects, postProjects}
+    const updateProject = async (req, res) => {
+      try {
+        const { id } = req.params;
+        const updateData = req.body;
+    
+        const updatedProject = await Project.findByIdAndUpdate(id, updateData, {
+          new: true,
+          runValidators: true
+        });
+    
+        if (!updatedProject) {
+          return res.status(404).json({
+            success: false,
+            message: 'Project not found'
+          });
+        }
+    
+        res.status(200).json({
+          success: true,
+          message: 'Project updated successfully',
+          data: updatedProject
+        });
+      } catch (error) {
+        if (error.name === 'ValidationError') {
+          const errors = Object.values(error.errors).map((err) => ({
+            message: `${err.message}`
+          }));
+    
+          return res.status(400).json({
+            success: false,
+            message: 'Validation failed',
+            errors
+          });
+        }
+    
+        res.status(500).json({
+          success: false,
+          message: 'Something went wrong while updating the project'
+        });
+      }
+    };
+
+module.exports = {getProjects, postProjects, updateProject}
