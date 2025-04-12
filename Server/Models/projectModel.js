@@ -3,15 +3,15 @@ const {Schema, model} = require('mongoose')
 const projectSchema = new Schema({
     title:{
         type: String,
-        required: true
+        required: [true, 'Title is required']
     },
     category:{
         type: String,
-        required: true
+        required: [true, 'Category is required']
     },
     description:{
         type: String,
-        required: true
+        required: [true, 'Decription is required']
     },
     dueDate:{
         type: Date
