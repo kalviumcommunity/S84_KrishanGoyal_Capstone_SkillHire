@@ -17,7 +17,7 @@ const projectSchema = new Schema({
         type: Date
     },
     postedBy:{
-        type: mongoose.Schema.Types.ObjectId,
+        type: Schema.Types.ObjectId,
         ref: 'User'
     }
 },
