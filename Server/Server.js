@@ -1,9 +1,11 @@
 const express = require('express');
+const connectToDb = require('./Config/db');
 const app = express()
 app.use(express.json())
 
 require('dotenv').config()
 const port = process.env.PORT || 3000;
+const db = process.env.DB_URI
 
 
 app.get('/', (req,res)=>{
@@ -12,4 +14,5 @@ app.get('/', (req,res)=>{
 
 app.listen(port, async()=>{
     console.log(`Server is running at http://localhost:${port}`)
+    await connectToDb(db)
 })
