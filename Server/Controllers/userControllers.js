@@ -4,6 +4,12 @@ const getUsers = async (req, res) => {
   try {
     const users = await User.find();
 
+    if(users.length === 0){
+      return res.json({
+        message: "No data to return"
+      })
+    }
+
     res.status(200).json({
       success: true,
       users
