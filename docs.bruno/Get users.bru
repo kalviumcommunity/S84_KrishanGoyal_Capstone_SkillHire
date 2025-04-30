@@ -1,0 +1,15 @@
+meta {
+  name: Get users
+  type: http
+  seq: 4
+}
+
+get {
+  url: http:localhost:8000/api/users
+  body: json
+  auth: inherit
+}
+
+headers {
+  Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MGY3NWQ3ZjU3NzhlMTE1ODIzMzU5NiIsInVzZXJOYW1lIjoidXNlcjgiLCJpYXQiOjE3NDYwMTU5OTUsImV4cCI6MTc0NjAxOTU5NX0.slobHb8rKURMS0TSGzW2kszwmMpiIpxbCfaJduRcNjo
+}

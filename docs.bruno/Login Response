@@ -1,0 +1,13 @@
+{
+  "message": "Login successful",
+  "user": {
+    "_id": "680f6b3eef0063703f4f33e4",
+    "name": "user5",
+    "userName": "user5",
+    "email": "user5@gmail.com",
+    "password": "$2b$10$J2GV8efDWgc0xIFUu0A0xOudoIzYH../6PvzzmqNTLgZVIkjLLtSa",
+    "createdAt": "2025-04-28T11:49:18.650Z",
+    "updatedAt": "2025-04-28T11:49:18.650Z",
+    "__v": 0
+  }
+}

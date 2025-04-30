@@ -1,0 +1,14 @@
+{
+  "success": true,
+  "message": "User updated successfully",
+  "data": {
+    "_id": "68039908cf8d3688757c2d53",
+    "name": "John",
+    "userName": "johndoe",
+    "email": "example@gmail.com",
+    "password": "securepassword",
+    "createdAt": "2025-04-19T12:37:28.114Z",
+    "updatedAt": "2025-04-30T12:35:32.950Z",
+    "__v": 0
+  }
+}

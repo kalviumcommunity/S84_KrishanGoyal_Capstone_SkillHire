@@ -1,0 +1,21 @@
+meta {
+  name: Update Projects
+  type: http
+  seq: 9
+}
+
+put {
+  url: http://localhost:8000/api/projects/68121c6d1a7ddd79543309fb
+  body: json
+  auth: none
+}
+
+headers {
+  authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MGY3NWQ3ZjU3NzhlMTE1ODIzMzU5NiIsInVzZXJOYW1lIjoidXNlcjgiLCJpYXQiOjE3NDYwMTU5OTUsImV4cCI6MTc0NjAxOTU5NX0.slobHb8rKURMS0TSGzW2kszwmMpiIpxbCfaJduRcNjo
+}
+
+body:json {
+  {
+    "title": "Build a website to advertise products"
+  }
+}

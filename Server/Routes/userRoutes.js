@@ -5,6 +5,6 @@ const verifyToken = require('../Middlewares/authMiddleware')
 
 router.get('/', verifyToken, getUsers)
 router.post('/', verifyToken, postUser)
-router.put('/', verifyToken, updateUser)
+router.put('/:id', verifyToken, updateUser)
 
 module.exports = router

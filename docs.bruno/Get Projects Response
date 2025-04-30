@@ -1,0 +1,25 @@
+{
+  "success": true,
+  "Projects": [
+    {
+      "_id": "68039992cf8d3688757c2d59",
+      "title": "Build a Portfolio Website",
+      "category": "Web Development",
+      "description": "Create a personal portfolio website to showcase projects and skills.",
+      "dueDate": "2025-04-19T00:00:00.000Z",
+      "createdAt": "2025-04-19T12:39:46.515Z",
+      "updatedAt": "2025-04-19T12:39:46.515Z",
+      "__v": 0
+    },
+    {
+      "_id": "68039b86cf8d3688757c2d62",
+      "title": "Design a logo for my web app",
+      "category": "Web Development",
+      "description": "Create a personal portfolio website to showcase projects and skills.",
+      "dueDate": "2025-04-19T00:00:00.000Z",
+      "createdAt": "2025-04-19T12:48:06.804Z",
+      "updatedAt": "2025-04-19T13:07:06.323Z",
+      "__v": 0
+    }
+  ]
+}

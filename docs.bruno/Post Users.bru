@@ -1,0 +1,24 @@
+meta {
+  name: Post Users
+  type: http
+  seq: 6
+}
+
+post {
+  url: http://localhost:8000/api/users
+  body: json
+  auth: none
+}
+
+headers {
+  authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MGY3NWQ3ZjU3NzhlMTE1ODIzMzU5NiIsInVzZXJOYW1lIjoidXNlcjgiLCJpYXQiOjE3NDYwMTU5OTUsImV4cCI6MTc0NjAxOTU5NX0.slobHb8rKURMS0TSGzW2kszwmMpiIpxbCfaJduRcNjo
+}
+
+body:json {
+  {
+        "name": "user9",
+        "userName": "user10",
+        "email": "user10@gmail.com",
+        "password": "securepassword"
+  }
+}
