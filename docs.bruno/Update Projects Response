@@ -1,0 +1,14 @@
+{
+  "success": true,
+  "message": "Project updated successfully",
+  "data": {
+    "_id": "68121c6d1a7ddd79543309fb",
+    "title": "Build a website to advertise products",
+    "category": "Web Development",
+    "description": "Create a marketting website to showcase projects and skills.",
+    "dueDate": "2025-04-30T00:00:00.000Z",
+    "createdAt": "2025-04-30T12:49:49.237Z",
+    "updatedAt": "2025-04-30T12:52:04.785Z",
+    "__v": 0
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "message": "User created successfully",
+  "user": {
+    "name": "user6",
+    "userName": "user6",
+    "email": "user6@gmail.com",
+    "password": "$2b$10$tnuiTWu086HWws.anitx8OwjQZ4bTeHFuZMmdhgAGeDnkRUJFgeoy",
+    "_id": "680f6e86ef0063703f4f33e7",
+    "createdAt": "2025-04-28T12:03:18.675Z",
+    "updatedAt": "2025-04-28T12:03:18.675Z",
+    "__v": 0
+  }
+}

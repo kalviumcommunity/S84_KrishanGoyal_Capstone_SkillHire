@@ -1,0 +1,14 @@
+{
+  "success": true,
+  "message": "Project created successfully",
+  "data": {
+    "title": "Build a Marketting Website",
+    "category": "Web Development",
+    "description": "Create a marketting website to showcase projects and skills.",
+    "dueDate": "2025-04-30T00:00:00.000Z",
+    "_id": "68121c6d1a7ddd79543309fb",
+    "createdAt": "2025-04-30T12:49:49.237Z",
+    "updatedAt": "2025-04-30T12:49:49.237Z",
+    "__v": 0
+  }
+}

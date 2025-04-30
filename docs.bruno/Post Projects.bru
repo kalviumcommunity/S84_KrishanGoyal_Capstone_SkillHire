@@ -1,0 +1,24 @@
+meta {
+  name: Post Projects
+  type: http
+  seq: 8
+}
+
+post {
+  url: http://localhost:8000/api/projects
+  body: json
+  auth: none
+}
+
+headers {
+  authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MGY3NWQ3ZjU3NzhlMTE1ODIzMzU5NiIsInVzZXJOYW1lIjoidXNlcjgiLCJpYXQiOjE3NDYwMTU5OTUsImV4cCI6MTc0NjAxOTU5NX0.slobHb8rKURMS0TSGzW2kszwmMpiIpxbCfaJduRcNjo
+}
+
+body:json {
+  {
+        "title": "Build a Marketting Website",
+        "category": "Web Development",
+        "description": "Create a marketting website to showcase projects and skills.",
+        "dueDate": "2025-04-30"
+      }
+}
