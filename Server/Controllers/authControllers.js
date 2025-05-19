@@ -4,9 +4,9 @@ const jwt = require('jsonwebtoken');
 const { OAuth2Client } = require('google-auth-library');
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
-// Step 1: Signup
 const signup = async (req, res) => {
     try {
+        console.log('Received req.body:', req.body);
         const { fullName, email, password, phone } = req.body;
 
         const existingUser = await User.findOne({ email });
@@ -43,8 +43,8 @@ const signup = async (req, res) => {
 
         res.cookie('token', token, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production', // false in development
-            sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax', // lax in development
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
             maxAge: 60 * 60 * 1000,
             domain: process.env.NODE_ENV === 'production' ? 'yourdomain.com' : undefined
         });
@@ -66,7 +66,6 @@ const signup = async (req, res) => {
     }
 };
 
-// Step 2: Complete Profile
 const completeProfile = async (req, res) => {
     try {
         const userId = req.userId;
@@ -110,7 +109,6 @@ const completeProfile = async (req, res) => {
     }
 };
 
-// Login
 const login = async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -141,13 +139,13 @@ const login = async (req, res) => {
             message: 'Login successful',
             user: userData,
             token,
-            role: user.role // Include the role in the response
+            role: user.role
         });
     } catch (error) {
         res.status(400).json({ error: error.message });
     }
 };
-// Get current user
+
 const getMe = async (req, res) => {
     try {
         const user = await User.findById(req.userId).select('-password');
@@ -169,7 +167,6 @@ const googleAuth = async (req, res) => {
             return res.status(400).json({ error: 'Google token is required' });
         }
 
-        // Verify Google token
         const ticket = await client.verifyIdToken({
             idToken: token,
             audience: process.env.GOOGLE_CLIENT_ID,
@@ -177,18 +174,15 @@ const googleAuth = async (req, res) => {
 
         const payload = ticket.getPayload();
 
-        // Validate essential fields
         if (!payload.email || !payload.name) {
             return res.status(400).json({ error: 'Invalid Google token payload' });
         }
 
         const { email, name, picture } = payload;
 
-        // Check if user exists
         let user = await User.findOne({ email });
 
         if (!user) {
-            // Create new user if doesn't exist
             user = await User.create({
                 fullName: name,
                 email,
@@ -203,14 +197,12 @@ const googleAuth = async (req, res) => {
             });
         }
 
-        // Generate JWT token
         const authToken = jwt.sign(
             { id: user._id, email: user.email, role: user.role },
             process.env.JWT_SECRET,
             { expiresIn: '1h' }
         );
 
-        // Set cookie with authToken instead of Google token
         res.cookie('token', authToken, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
@@ -219,7 +211,6 @@ const googleAuth = async (req, res) => {
             domain: process.env.NODE_ENV === 'production' ? 'yourdomain.com' : undefined
         });
 
-        // Return user data
         const userData = {
             _id: user._id,
             fullName: user.fullName,
