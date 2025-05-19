@@ -10,7 +10,7 @@ import Testimonials from '../Components/Testimonials';
 
 const LandingPage = () => {
   return (
-    <>
+    <div className="landing-page">
       <Navbar />
       <HeroSection />
       <AboutSection />
@@ -20,8 +20,8 @@ const LandingPage = () => {
       <Testimonials />
       <ContactForm />
       <Footer />
-    </>
+    </div>
   );
 };
 
-export default LandingPage
+export default LandingPage;

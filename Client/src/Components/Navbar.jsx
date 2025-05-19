@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import '../Styles/Navbar.css';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [activeLink, setActiveLink] = useState('');
+  const navigate = useNavigate();
 
-  // Scroll spy effect
   useEffect(() => {
     const handleScroll = () => {
       const sections = ['how-it-works', 'testimonials'];
-      const scrollPos = window.scrollY + 100; // offset
+      const scrollPos = window.scrollY + 100;
 
       for (let id of sections) {
         const section = document.getElementById(id);
@@ -30,12 +30,12 @@ const Navbar = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  return (
+   return (
     <nav className="navbar">
       <div className="navbar-inner">
         <div className="navbar-logo">
           <Link to="/">
-            <img src='./image.png' alt="SkillHire Logo" className="logo-img" />
+            <img src='./SkillHireLogo.png' alt="SkillHire Logo" className="logo-img" />
           </Link>
         </div>
         <div className={`navbar-links ${menuOpen ? 'active' : ''}`}>
@@ -53,8 +53,16 @@ const Navbar = () => {
           >
             Testimonials
           </a>
-          <button className="login-btn" onClick={() => setMenuOpen(false)}>Login</button>
-          <button className="signup-btn" onClick={() => setMenuOpen(false)}>Sign Up</button>
+          <button className="login-btn" onClick={() => {setMenuOpen(false); navigate('/login')}}>Login</button>
+          <button
+            className="signup-btn"
+            onClick={() => {
+              setMenuOpen(false);
+              navigate('/signup');
+            }}
+          >
+            Sign Up
+          </button>
         </div>
         <div
           className={`hamburger ${menuOpen ? 'open' : ''}`}

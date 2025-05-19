@@ -1,7 +1,21 @@
 const express = require('express');
 const connectToDb = require('./Config/db');
 const app = express()
+const cors = require('cors')
+const cookieParser = require('cookie-parser');
+
+
+app.use(cookieParser());
 app.use(express.json())
+
+app.use(cors({
+  origin: process.env.NODE_ENV === 'production' 
+    ? "https://krishan-skillhire.netlify.app"
+    : 'http://localhost:5173',
+  credentials: true,
+  exposedHeaders: ['set-cookie']
+}));
+
 
 require('dotenv').config()
 const port = process.env.PORT || 3000;

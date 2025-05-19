@@ -6,11 +6,18 @@ body {
   color: #333;
 }
 
+
+html, body{
+  height: 100%;
+}
+
 .landing-page {
   width: 100%;
   margin: 0;
   padding-top: 4.5rem;
   box-sizing: border-box;
+  overflow-x: scroll;
+  overflow-y: auto;
 }
 
 /* Full screen hero */
