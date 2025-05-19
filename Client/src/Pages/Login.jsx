@@ -61,7 +61,7 @@ export default function Login() {
             navigate("/pro");
             break;
           default:
-            alert('Error in checking for role')
+            alert("Error in checking for role");
         }
       } else {
         alert(data.error || "Login failed.");
@@ -144,7 +144,21 @@ export default function Login() {
             </div>
 
             <div className="signup-link adjusted-login-link">
-              New here? <a href="/signup">Sign Up</a>
+              New here?{" "}
+              <button
+                type="button"
+                className="login-link"
+                onClick={() => navigate("/signup")}
+                style={{
+                  background: "none",
+                  border: "none",
+                  color: "#646cff",
+                  cursor: "pointer",
+                  padding: 0,
+                }}
+              >
+                Sign Up
+              </button>
             </div>
           </form>
         </div>
