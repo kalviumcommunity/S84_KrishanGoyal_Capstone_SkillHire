@@ -191,10 +191,10 @@ export default function SignupMultiStep() {
           navigate("/client");
           break;
         case "go-worker":
-          navigate("/go-worker");
+          navigate("/go");
           break;
         case "pro-worker":
-          navigate("/pro-worker");
+          navigate("/pro");
           break;
         default:
           alert("Error in checking the role of user");

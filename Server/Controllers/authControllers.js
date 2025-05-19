@@ -6,7 +6,6 @@ const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const signup = async (req, res) => {
     try {
-        console.log('Received req.body:', req.body);
         const { fullName, email, password, phone } = req.body;
 
         const existingUser = await User.findOne({ email });
@@ -132,9 +131,8 @@ const login = async (req, res) => {
         res.cookie('token', token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
-            sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+            sameSite: 'None',
             maxAge: 60 * 60 * 1000,
-            domain: process.env.NODE_ENV === 'production' ? 'yourdomain.com' : undefined
         });
 
         const { password: _, ...userData } = user.toObject();
@@ -207,12 +205,11 @@ const googleAuth = async (req, res) => {
             { expiresIn: '1h' }
         );
 
-        res.cookie('token', authToken, {
+        res.cookie('token', token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
-            sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+            sameSite: 'None',
             maxAge: 60 * 60 * 1000,
-            domain: process.env.NODE_ENV === 'production' ? 'yourdomain.com' : undefined
         });
 
         const userData = {
