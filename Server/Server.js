@@ -8,13 +8,30 @@ const cookieParser = require('cookie-parser');
 app.use(cookieParser());
 app.use(express.json())
 
+const allowedOrigins = [
+  'http://localhost:5173',
+  'https://krishan-skillhire.netlify.app'
+];
+
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' 
-    ? "https://krishan-skillhire.netlify.app"
-    : 'http://localhost:5173',
+  origin: function (origin, callback) {
+    const whitelist = [
+      'http://localhost:5173',
+      'https://krishan-skillhire.netlify.app',
+    ];
+
+    if (!origin) return callback(null, true);
+
+    if (whitelist.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
-  exposedHeaders: ['set-cookie']
+  exposedHeaders: ['set-cookie'],
 }));
+
 
 
 require('dotenv').config()
