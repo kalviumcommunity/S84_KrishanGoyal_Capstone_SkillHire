@@ -1,35 +1,64 @@
-const {Schema, model} = require('mongoose')
+const mongoose = require('mongoose');
+const { Schema, model } = mongoose;
+const ObjectId = Schema.Types.ObjectId;
 
-const userSchema = new Schema({
-    name:{
-        type: String,
-        required: [true, 'Name is required'],
-        minLength: [2, 'Name must be at least 3 character long']
-    },
-    userName:{
-        type: String,
-        unique: true,
-        required: [true, 'Username is required'],
-    },
-    email:{
-        type: String,
-        unique: true,
-        required: [true, 'Email is required'],
-        match:[
-            /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/,
-            'Please enter a valid email address'
-        ]
-    },
-    password:{
-        type: String,
-        minLength: [8, 'Password must be at least 8 character long'],
-        required: [true, 'Password is required']
-    }
-},
+const UserSchema = new Schema({
+  email: { type: String, required: true, unique: true },
+  password: { type: String, select: false },
+  fullName: { type: String, required: true },
+  phone: { type: String, required: false },
+  profileImageUrl: { type: String, default: './defaultImage.png' },
+  authProvider: { type: String, enum: ['local', 'google'], default: 'local' },
+  googleId: { type: String },
+  role: {
+    type: String,
+    required: false,
+    default: 'client',
+    enum: ['client', 'go-worker', 'pro-worker']
+  },
+  isProfileComplete: { type: Boolean, default: false },
+  createdAt: { type: Date, default: Date.now },
 
-    {timestamps: true}
+  // Job posting (clients & pro-workers for pro jobs only)
+  postedJobs: [{
+    type: ObjectId,
+    ref: 'Job'
+  }],
 
-)
+  // Client ratings of workers
+  ratingsGiven: [{
+    workerId: { type: ObjectId, ref: 'User' },
+    jobId: { type: ObjectId, ref: 'Job' },
+    score: { type: Number, min: 1, max: 5 },
+    comment: String,
+    createdAt: { type: Date, default: Date.now }
+  }],
 
-const userModel = model('User', userSchema)
-module.exports = userModel
+  // Go Worker fields
+  goSkills: [String],
+  hourlyRate: Number,
+  location: {
+    city: String,
+    subCity: String
+  },
+  isAvailable: { type: Boolean, default: false },
+  completedJobs: { type: Number, default: 0 },
+
+  // Pro Worker fields
+  proSkills: [String],
+  portfolioUrl: String,
+  minProjectRate: Number,
+  completedProjects: { type: Number, default: 0 },
+
+  // Shared for workers
+  ratingsReceived: [{
+    clientId: { type: ObjectId, ref: 'User' },
+    jobId: { type: ObjectId, ref: 'Job' },
+    score: { type: Number, min: 1, max: 5 },
+    comment: String,
+    createdAt: { type: Date, default: Date.now }
+  }],
+  avgRating: { type: Number, default: 5 }
+});
+
+module.exports = model('User', UserSchema);
