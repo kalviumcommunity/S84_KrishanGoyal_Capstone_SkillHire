@@ -44,9 +44,8 @@ const signup = async (req, res) => {
         res.cookie('token', token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
-            sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+            sameSite: 'None',
             maxAge: 60 * 60 * 1000,
-            domain: process.env.NODE_ENV === 'production' ? 'yourdomain.com' : undefined
         });
 
         const { password: _, ...userData } = newUser.toObject();
@@ -100,8 +99,13 @@ const completeProfile = async (req, res) => {
 
         const { password, ...userData } = user.toObject();
 
+        const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
+            expiresIn: "7d"
+        });
+
         res.status(200).json({
             message: 'Profile completed successfully',
+            token,
             user: userData
         });
     } catch (error) {
