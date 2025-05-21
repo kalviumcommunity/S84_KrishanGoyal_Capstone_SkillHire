@@ -35,7 +35,11 @@ const signup = async (req, res) => {
         });
 
         const token = jwt.sign(
-            { id: newUser._id, email: newUser.email },
+            {
+                id: newUser._id,
+                email: newUser.email,
+                role: newUser.role || 'client'
+            },
             process.env.JWT_SECRET,
             { expiresIn: '1h' }
         );
@@ -55,11 +59,9 @@ const signup = async (req, res) => {
             token
         });
     } catch (error) {
-        console.log(error);
         if (error.code === 11000) {
             return res.status(400).json({ error: 'Email already exists' });
         }
-
         res.status(400).json({ error: error.message });
     }
 };
@@ -228,8 +230,6 @@ const googleAuth = async (req, res) => {
         });
 
     } catch (error) {
-        console.error('Google auth error:', error);
-
         let errorMessage = 'Google authentication failed';
         if (error.message.includes('Token used too late')) {
             errorMessage = 'Session expired. Please try again.';
@@ -243,7 +243,6 @@ const googleAuth = async (req, res) => {
         });
     }
 };
-
 
 module.exports = {
     signup,
