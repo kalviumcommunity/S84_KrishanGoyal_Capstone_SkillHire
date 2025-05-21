@@ -5,7 +5,7 @@ import { jwtDecode } from "jwt-decode";
 import axios from "axios";
 import "../Styles/SignupMultiStep.css";
 
-const baseUrl = import.meta.env.VITE_API_BASE_URL;
+const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
 export default function SignupMultiStep() {
@@ -144,6 +144,7 @@ export default function SignupMultiStep() {
       );
 
       if (res.data) {
+        localStorage.setItem("authToken", res.data.token);
         setStep(2);
       }
     } catch (err) {
@@ -162,53 +163,62 @@ export default function SignupMultiStep() {
     setError(null);
 
     try {
-      const payload = {
-        role: form.role,
-      };
-
-      if (form.role === "go-worker") {
-        payload.goSkills = form.goSkills;
-        payload.hourlyRate = form.hourlyRate;
-        payload.location = form.location;
-      } else if (form.role === "pro-worker") {
-        payload.proSkills = form.proSkills;
-        payload.portfolioUrl = form.portfolioUrl;
-        payload.minProjectRate = form.minProjectRate;
-      }
-
-      const res = await axios.post(
-        `${baseUrl}/api/auth/complete-profile`,
-        payload,
-        {
-          withCredentials: true,
+        const token = localStorage.getItem("authToken");
+        if (!token) {
+            throw new Error("No authentication token found");
         }
-      );
 
-      localStorage.setItem("authToken", res.data.token);
+        const payload = {
+            role: form.role,
+        };
 
-      switch (form.role) {
-        case "client":
-          navigate("/client");
-          break;
-        case "go-worker":
-          navigate("/go");
-          break;
-        case "pro-worker":
-          navigate("/pro");
-          break;
-        default:
-          alert("Error in checking the role of user");
-      }
+        if (form.role === "go-worker") {
+            payload.goSkills = form.goSkills;
+            payload.hourlyRate = form.hourlyRate;
+            payload.location = form.location;
+        } else if (form.role === "pro-worker") {
+            payload.proSkills = form.proSkills;
+            payload.portfolioUrl = form.portfolioUrl;
+            payload.minProjectRate = form.minProjectRate;
+        }
+
+        const axiosInstance = axios.create({
+            baseURL: baseUrl,
+            withCredentials: true,
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        const res = await axiosInstance.post('/api/auth/complete-profile', payload);
+
+        if (res.data.token) {
+            localStorage.setItem("authToken", res.data.token);
+        }
+
+        switch (form.role) {
+            case "client":
+                navigate("/client");
+                break;
+            case "go-worker":
+                navigate("/go");
+                break;
+            case "pro-worker":
+                navigate("/pro");
+                break;
+            default:
+                alert("Error in checking the role of user");
+        }
     } catch (err) {
-      console.error("Complete profile error:", err);
-      setError(
-        err.response?.data?.error ||
-          "Failed to complete profile. Please try again."
-      );
+        setError(
+            err.response?.data?.error ||
+            "Failed to complete profile. Please try again."
+        );
     } finally {
-      setLoading(false);
+        setLoading(false);
     }
-  };
+};
 
   return (
     <GoogleOAuthProvider clientId={googleClientId}>

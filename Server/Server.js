@@ -34,11 +34,13 @@ const port = process.env.PORT || 3000;
 const db = process.env.DB_URI
 
 const User = require('./Routes/userRoutes')
-const Projects = require('./Routes/projectRoutes')
+const goProjectRoutes = require('./Routes/goProjectRoutes')
+const proProjectRoutes = require('./Routes/proProjectRoutes')
 const Auth = require('./Routes/authRoutes');
 
 app.use('/api/users', User)
-app.use('/api/projects', Projects)
+app.use('/api/go-Projects', goProjectRoutes)
+app.use('/api/pro-Projects', proProjectRoutes)
 app.use('/api/auth', Auth)
 
 app.get('/', (req,res)=>{
