@@ -244,10 +244,32 @@ const googleAuth = async (req, res) => {
     }
 };
 
+    const logout = async (req, res) => {
+        try {
+            res.clearCookie('token', {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'None'
+            });
+            res.clearCookie('tempToken', {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'None',
+                path: '/'
+            });
+
+            res.status(200).json({ message: 'Logged out successfully' });
+        } catch (error) {
+            console.error('Logout error:', error);
+            res.status(500).json({ error: 'Failed to logout' });
+        }
+    };
+
 module.exports = {
     signup,
     completeProfile,
     login,
     getMe,
-    googleAuth
+    googleAuth,
+    logout
 };
