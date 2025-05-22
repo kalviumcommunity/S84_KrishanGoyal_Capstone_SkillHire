@@ -7,8 +7,24 @@ import ContactForm from '../Components/ContactForm';
 import Navbar from '../Components/Navbar';
 import Footer from '../Components/Footer';
 import Testimonials from '../Components/Testimonials';
+import { useEffect } from 'react';
 
 const LandingPage = () => {
+
+   useEffect(() => {
+    window.history.pushState(null, '', window.location.href);
+
+    const onPopState = () => {
+      window.history.pushState(null, '', window.location.href);
+    };
+
+    window.addEventListener('popstate', onPopState);
+
+    return () => {
+      window.removeEventListener('popstate', onPopState);
+    };
+  }, []);
+
   return (
     <div className="landing-page">
       <Navbar />

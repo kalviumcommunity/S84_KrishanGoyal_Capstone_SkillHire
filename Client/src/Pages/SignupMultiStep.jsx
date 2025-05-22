@@ -199,13 +199,13 @@ export default function SignupMultiStep() {
 
         switch (form.role) {
             case "client":
-                navigate("/client");
+                navigate("/client", {replace: true});
                 break;
             case "go-worker":
-                navigate("/go");
+                navigate("/go", {replce: true});
                 break;
             case "pro-worker":
-                navigate("/pro");
+                navigate("/pro", {replace: true});
                 break;
             default:
                 alert("Error in checking the role of user");

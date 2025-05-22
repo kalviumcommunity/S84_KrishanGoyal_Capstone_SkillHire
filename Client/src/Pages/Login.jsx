@@ -52,13 +52,13 @@ export default function Login() {
 
         switch (data.user?.role) {
           case "client":
-            navigate("/client");
+            navigate("/client", {replace: true});
             break;
           case "go-worker":
-            navigate("/go");
+            navigate("/go", {replace: true});
             break;
           case "pro-worker":
-            navigate("/pro");
+            navigate("/pro", {replace: true});
             break;
           default:
             alert("Error in checking for role");
