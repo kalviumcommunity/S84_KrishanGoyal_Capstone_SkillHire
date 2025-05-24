@@ -38,7 +38,7 @@ const signup = async (req, res) => {
             {
                 id: newUser._id,
                 email: newUser.email,
-                role: newUser.role || 'client'
+                role: newUser.role
             },
             process.env.JWT_SECRET,
             { expiresIn: '1h' }
@@ -100,7 +100,7 @@ const completeProfile = async (req, res) => {
 
         const { password, ...userData } = user.toObject();
 
-        const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
+        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
             expiresIn: "7d"
         });
 
@@ -128,7 +128,7 @@ const login = async (req, res) => {
             return res.status(401).json({ error: 'Invalid credentials' });
         }
 
-        const token = jwt.sign({ id: user._id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '1h' });
+        const token = jwt.sign({ id: user._id, email: user.email, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
         res.cookie('token', token, {
             httpOnly: true,
@@ -151,6 +151,7 @@ const login = async (req, res) => {
 };
 
 const getMe = async (req, res) => {
+    console.log('I am getting called')
     try {
         const user = await User.findById(req.userId).select('-password');
         if (!user) {
@@ -244,26 +245,26 @@ const googleAuth = async (req, res) => {
     }
 };
 
-    const logout = async (req, res) => {
-        try {
-            res.clearCookie('token', {
-                httpOnly: true,
-                secure: process.env.NODE_ENV === 'production',
-                sameSite: 'None'
-            });
-            res.clearCookie('tempToken', {
-                httpOnly: true,
-                secure: process.env.NODE_ENV === 'production',
-                sameSite: 'None',
-                path: '/'
-            });
+const logout = async (req, res) => {
+    try {
+        res.clearCookie('token', {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'None'
+        });
+        res.clearCookie('tempToken', {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'None',
+            path: '/'
+        });
 
-            res.status(200).json({ message: 'Logged out successfully' });
-        } catch (error) {
-            console.error('Logout error:', error);
-            res.status(500).json({ error: 'Failed to logout' });
-        }
-    };
+        res.status(200).json({ message: 'Logged out successfully' });
+    } catch (error) {
+        console.error('Logout error:', error);
+        res.status(500).json({ error: 'Failed to logout' });
+    }
+};
 
 module.exports = {
     signup,

@@ -1,8 +1,10 @@
 const ProProject = require('../Models/proProjectModel');
+const User = require('../Models/userModel');
 
 const createProProject = async (req, res) => {
   try {
     const { title, description, dueDate, budget } = req.body;
+
 
     if (req.user.role !== 'client') {
       return res.status(403).json({ error: 'Only clients can post projects' });
@@ -28,6 +30,11 @@ const createProProject = async (req, res) => {
     });
 
     await newProject.save();
+
+        await User.findByIdAndUpdate(
+      req.user._id,
+      { $push: { postedJobs: newProject._id } }
+    );
 
     res.status(201).json({
       message: 'ProProject created successfully',
@@ -111,5 +118,24 @@ const deleteProProject = async (req, res) => {
   }
 };
 
+const getMyProProjects = async (req, res) => {
+  try {
+    const userId = req.user._id;
 
-module.exports = { createProProject, getProProjects, updateProProject, deleteProProject };
+    const projects = await ProProject.find({ postedBy: userId })
+      .populate('postedBy', 'fullName email')
+      .populate('assignedTo', 'fullName email')
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      message: 'ProProjects created by current user fetched successfully',
+      count: projects.length,
+      projects,
+    });
+  } catch (error) {
+    console.error('Error fetching user ProProjects:', error);
+    res.status(500).json({ error: 'Server error while fetching user projects' });
+  }
+};
+
+module.exports = { createProProject, getProProjects, updateProProject, deleteProProject, getMyProProjects };

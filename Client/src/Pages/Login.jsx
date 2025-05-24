@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 import "../Styles/Login.css";
 const baseUrl = import.meta.env.VITE_API_BASE_URL;
 
 export default function Login() {
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const [form, setForm] = useState({
     email: "",
@@ -46,22 +48,24 @@ export default function Login() {
       const data = await res.json();
 
       if (res.ok) {
-        if (data.token) {
-          localStorage.setItem("authToken", data.token);
-        }
-
-        switch (data.user?.role) {
-          case "client":
-            navigate("/client", {replace: true});
-            break;
-          case "go-worker":
-            navigate("/go", {replace: true});
-            break;
-          case "pro-worker":
-            navigate("/pro", {replace: true});
-            break;
-          default:
-            alert("Error in checking for role");
+        if (data.token && data.user) {
+          await login(data.user, data.token);
+          
+          switch (data.user.role) {
+            case "client":
+              navigate("/client", {replace: true});
+              break;
+            case "go-worker":
+              navigate("/go", {replace: true});
+              break;
+            case "pro-worker":
+              navigate("/pro", {replace: true});
+              break;
+            default:
+              alert("Error in checking for role");
+          }
+        } else {
+          alert("Invalid response from server");
         }
       } else {
         alert(data.error || "Login failed.");

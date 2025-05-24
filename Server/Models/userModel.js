@@ -16,6 +16,7 @@ const UserSchema = new Schema({
     default: 'client',
     enum: ['client', 'go-worker', 'pro-worker']
   },
+  description: {type: String, minLength: 10},
   isProfileComplete: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now },
 

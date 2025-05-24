@@ -22,6 +22,7 @@ const verifyToken = (req, res, next) => {
     req.user = {
       _id: decoded.id,
       role: decoded.role,
+      email: decoded.email
     };
     next();
   } catch (err) {

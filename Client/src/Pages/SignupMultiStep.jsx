@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 import { jwtDecode } from "jwt-decode";
 import axios from "axios";
+import { useAuth } from "../context/AuthContext";
 import "../Styles/SignupMultiStep.css";
 
 const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
@@ -10,6 +11,7 @@ const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
 export default function SignupMultiStep() {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [form, setForm] = useState({
     fullName: "",
     email: "",
@@ -107,8 +109,12 @@ export default function SignupMultiStep() {
         }
       );
 
-      localStorage.setItem("authToken", response.data.token);
-      navigate("/dashboard");
+      if (response.data.token && response.data.user) {
+        await login(response.data.user, response.data.token);
+        navigate("/dashboard");
+      } else {
+        throw new Error("Invalid response from server");
+      }
     } catch (error) {
       console.error("Google login error:", error);
       setError(
@@ -143,9 +149,11 @@ export default function SignupMultiStep() {
         }
       );
 
-      if (res.data) {
-        localStorage.setItem("authToken", res.data.token);
+      if (res.data.token && res.data.user) {
+        await login(res.data.user, res.data.token);
         setStep(2);
+      } else {
+        throw new Error("Invalid response from server");
       }
     } catch (err) {
       console.error("Signup error:", err);
@@ -193,22 +201,24 @@ export default function SignupMultiStep() {
 
         const res = await axiosInstance.post('/api/auth/complete-profile', payload);
 
-        if (res.data.token) {
-            localStorage.setItem("authToken", res.data.token);
-        }
-
-        switch (form.role) {
-            case "client":
-                navigate("/client", {replace: true});
-                break;
-            case "go-worker":
-                navigate("/go", {replce: true});
-                break;
-            case "pro-worker":
-                navigate("/pro", {replace: true});
-                break;
-            default:
-                alert("Error in checking the role of user");
+        if (res.data.token && res.data.user) {
+            await login(res.data.user, res.data.token);
+            
+            switch (form.role) {
+                case "client":
+                    navigate("/client", {replace: true});
+                    break;
+                case "go-worker":
+                    navigate("/go", {replace: true});
+                    break;
+                case "pro-worker":
+                    navigate("/pro", {replace: true});
+                    break;
+                default:
+                    alert("Error in checking the role of user");
+            }
+        } else {
+            throw new Error("Invalid response from server");
         }
     } catch (err) {
         setError(
