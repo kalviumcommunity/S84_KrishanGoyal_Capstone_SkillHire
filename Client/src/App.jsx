@@ -7,6 +7,7 @@ import Login from './Pages/Login'
 import ProDashboard from './Pages/ProDashboard'
 import GoDashboard from './Pages/GoDashboard'
 import Client from './Pages/Client'
+import ProfilePage from './Pages/ProfilePage'
 
 function App() {
 
@@ -20,6 +21,7 @@ function App() {
         <Route path='/pro' element = {<ProDashboard/>}/>
         <Route path='/go' element = {<GoDashboard/>}/>
         <Route path='/client' element = {<Client/>}/>
+        <Route path='/profile' element = {<ProfilePage/>}/>
       </Routes>
     </>
   )

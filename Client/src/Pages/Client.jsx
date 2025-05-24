@@ -1,48 +1,399 @@
-import React from 'react'
-import { useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
-import axios from 'axios'
-const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+import React, { useState, useEffect } from "react";
+import { useAuth } from "../context/AuthContext";
+import { Link, useNavigate } from "react-router-dom";
+import NavbarDashboards from "../Components/NavbarDashboards";
+import axios from "axios";
+import "../Styles/Client.css";
 
-export default function Client() {
+const Client = () => {
+  const { user } = useAuth();
   const navigate = useNavigate();
+  const [projects, setProjects] = useState([]);
+  const [messages, setMessages] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [projectType, setProjectType] = useState("all"); // 'all', 'go', 'pro'
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [newProject, setNewProject] = useState({
+    type: "go",
+    title: "",
+    description: "",
+    city: "",
+    subCity: "",
+    category: "",
+    dueDate: "",
+    budget: "",
+  });
+  const [creatingProject, setCreatingProject] = useState(false);
 
+  const baseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
+
+  // Fetch projects from backend
   useEffect(() => {
-    window.history.pushState(null, '', window.location.href);
-    const onPopState = () => {
-      window.history.pushState(null, '', window.location.href);
-    };
-    window.addEventListener('popstate', onPopState);
+    const fetchProjects = async () => {
+      try {
+        setLoading(true);
+        let endpoint = `${baseUrl}/api/projects/posted/${user._id}`; // Changed endpoint
+        if (projectType === "go")
+          endpoint = `${baseUrl}/api/go-projects/${user._id}`; // Changed endpoint
+        else if (projectType === "pro")
+          endpoint = `${baseUrl}/api/pro-projects/${user._id}`; // Changed endpoint
 
-    return () => {
-      window.removeEventListener('popstate', onPopState);
+        const response = await axios.get(endpoint, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+          },
+          withCredentials: true,
+          params: {
+            // Add user ID as a parameter
+            userId: user._id,
+          },
+        });
+        setProjects(response.data.projects);
+        setMessages(response.data.messages || []);
+      } catch (error) {
+        console.error("Error fetching projects:", error);
+      } finally {
+        setLoading(false);
+      }
     };
-  }, []);
 
-const handleLogout = async () => {
+    fetchProjects();
+  }, [projectType, baseUrl, user._id]); // Added user._id to dependency array
+
+  const handleCreateProject = async (e) => {
+    e.preventDefault();
+    setCreatingProject(false);
     try {
-      await axios.post(`${baseUrl}/api/auth/logout`, {}, {
-        withCredentials: true
+      const endpoint =
+        newProject.type === "go"
+          ? `${baseUrl}/api/go-projects/add`
+          : `${baseUrl}/api/pro-projects/add`;
+
+      const payload = {
+        title: newProject.title,
+        description: newProject.description,
+        postedBy: user._id,
+      };
+
+      if (newProject.type === "go") {
+        payload.city = newProject.city;
+        payload.subCity = newProject.subCity || "";
+        payload.category = newProject.category;
+      } else {
+        payload.dueDate = newProject.dueDate;
+        payload.budget = Number(newProject.budget);
+      }
+
+      const response = await axios.post(endpoint, payload, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+        },
       });
 
-      localStorage.removeItem('authToken');
-      localStorage.removeItem('user');
-
-      sessionStorage.clear();
-
-      navigate('/', { replace: true });
+      setProjects([response.data.project, ...projects]);
+      setShowCreateModal(false);
+      setNewProject({
+        type: "go",
+        title: "",
+        description: "",
+        city: "",
+        subCity: "",
+        category: "",
+        dueDate: "",
+        budget: "",
+      });
     } catch (error) {
-      console.error('Logout error:', error);
-      localStorage.clear();
-      sessionStorage.clear();
-      navigate('/', { replace: true });
+      console.error(
+        "Error creating project:",
+        error.response?.data?.message || error.message
+      );
+    } finally {
+      setCreatingProject(false);
     }
   };
 
-  return (
-    <div>
-      <h1>Welcome to Client Dashboard</h1>
-      <button onClick={handleLogout}>Logout</button>
+  const getStatusBadgeClass = (status) => {
+    switch (status) {
+      case "yet to be assigned":
+        return "status-pending";
+      case "assigned but not completed":
+        return "status-in-progress";
+      case "completed":
+        return "status-completed";
+      default:
+        return "";
+    }
+  };
+
+  const renderProjectTypeFilter = () => (
+    <div className="project-filter">
+      <button
+        className={projectType === "all" ? "active" : ""}
+        onClick={() => setProjectType("all")}
+      >
+        All Projects
+      </button>
+      <button
+        className={projectType === "go" ? "active" : ""}
+        onClick={() => setProjectType("go")}
+      >
+        GO Projects
+      </button>
+      <button
+        className={projectType === "pro" ? "active" : ""}
+        onClick={() => setProjectType("pro")}
+      >
+        PRO Projects
+      </button>
     </div>
-  )
-}
+  );
+
+  const renderProjectCard = (project) => (
+    <div key={project._id} className="project-card">
+      <div className="project-header">
+        <h3>{project.title}</h3>
+        <span className={`status-badge ${getStatusBadgeClass(project.status)}`}>
+          {project.status}
+        </span>
+      </div>
+
+      <p className="project-description">{project.description}</p>
+
+      <div className="project-details">
+        {project.type === "go" ? (
+          <>
+            <div className="detail-item">
+              <span className="detail-label">Location:</span>
+              <span>
+                {project.city}
+                {project.subCity ? `, ${project.subCity}` : ""}
+              </span>
+            </div>
+            <div className="detail-item">
+              <span className="detail-label">Category:</span>
+              <span>{project.category}</span>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="detail-item">
+              <span className="detail-label">Budget:</span>
+              <span>₹{project.budget?.toLocaleString()}</span>
+            </div>
+            <div className="detail-item">
+              <span className="detail-label">Due Date:</span>
+              <span>{new Date(project.dueDate).toLocaleDateString()}</span>
+            </div>
+            <div className="detail-item">
+              <span className="detail-label">Applicants:</span>
+              <span>{project.applicants?.length || 0}</span>
+            </div>
+          </>
+        )}
+      </div>
+
+      <div className="project-actions">
+        <Link to={`/projects/${project._id}`} className="view-btn">
+          View Details
+        </Link>
+        {project.status === "yet to be assigned" && (
+          <button className="edit-btn">Edit</button>
+        )}
+      </div>
+    </div>
+  );
+
+  const renderCreateProjectModal = () => (
+    <div className="modal-overlay">
+      <div className="create-project-modal">
+        <h2>Create New {newProject.type.toUpperCase()} Project</h2>
+        <button
+          className="close-modal"
+          onClick={() => setShowCreateModal(false)}
+        >
+          &times;
+        </button>
+        <div className="modal-content">
+          <form onSubmit={handleCreateProject}>
+            <div className="form-group">
+              <label>Project Type</label>
+              <div className="type-toggle">
+                <button
+                  type="button"
+                  className={newProject.type === "go" ? "active" : ""}
+                  onClick={() => setNewProject({ ...newProject, type: "go" })}
+                >
+                  GO Project
+                </button>
+                <button
+                  type="button"
+                  className={newProject.type === "pro" ? "active" : ""}
+                  onClick={() => setNewProject({ ...newProject, type: "pro" })}
+                >
+                  PRO Project
+                </button>
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label>Title*</label>
+              <input
+                type="text"
+                value={newProject.title}
+                onChange={(e) =>
+                  setNewProject({ ...newProject, title: e.target.value })
+                }
+                required
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Description*</label>
+              <textarea
+                value={newProject.description}
+                onChange={(e) =>
+                  setNewProject({ ...newProject, description: e.target.value })
+                }
+                required
+              />
+            </div>
+
+            {newProject.type === "go" ? (
+              <>
+                <div className="form-group">
+                  <label>City*</label>
+                  <input
+                    type="text"
+                    value={newProject.city}
+                    onChange={(e) =>
+                      setNewProject({ ...newProject, city: e.target.value })
+                    }
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Sub City</label>
+                  <input
+                    type="text"
+                    value={newProject.subCity}
+                    onChange={(e) =>
+                      setNewProject({ ...newProject, subCity: e.target.value })
+                    }
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Category*</label>
+                  <input
+                    type="text"
+                    value={newProject.category}
+                    onChange={(e) =>
+                      setNewProject({ ...newProject, category: e.target.value })
+                    }
+                    required
+                  />
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="form-group">
+                  <label>Budget (₹)*</label>
+                  <input
+                    type="number"
+                    value={newProject.budget}
+                    onChange={(e) =>
+                      setNewProject({ ...newProject, budget: e.target.value })
+                    }
+                    required
+                    min="0"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Due Date</label>
+                  <input
+                    type="date"
+                    value={newProject.dueDate}
+                    onChange={(e) =>
+                      setNewProject({ ...newProject, dueDate: e.target.value })
+                    }
+                  />
+                </div>
+              </>
+            )}
+
+            <div className="form-actions">
+              <button
+                type="submit"
+                className="submit-btn"
+                disabled={creatingProject}
+              >
+                {creatingProject ? (
+                  <>
+                    <span className="spinner"></span> Creating...
+                  </>
+                ) : (
+                  "Create Project"
+                )}
+              </button>
+              <button
+                type="button"
+                className="cancel-btn"
+                onClick={() => setShowCreateModal(false)}
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <>
+      <NavbarDashboards />
+      <div className="client-dashboard">
+        <div className="dashboard-header">
+          <h1>Welcome back, {user?.fullName || "Client"}!</h1>
+          <p>Manage your {projectType === "all" ? "" : projectType} projects</p>
+        </div>
+
+        {renderProjectTypeFilter()}
+
+        <div className="dashboard-actions">
+          <button
+            className="new-project-btn"
+            onClick={() => setShowCreateModal(true)}
+          >
+            + New Project
+          </button>
+        </div>
+
+        {loading ? (
+          <div className="loading-spinner">Loading...</div>
+        ) : (
+          <div className="projects-grid">
+            {projects.length > 0 ? (
+              projects.map(renderProjectCard)
+            ) : (
+              <div className="no-projects">
+                <p>
+                  No {projectType === "all" ? "" : projectType} projects found
+                </p>
+                <button
+                  className="create-first-btn"
+                  onClick={() => setShowCreateModal(true)}
+                >
+                  Create your first project
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {showCreateModal && renderCreateProjectModal()}
+      </div>
+    </>
+  );
+};
+
+export default Client;

@@ -1,11 +1,10 @@
 import React from "react";
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import axios from 'axios'
-const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+import { useAuth } from '../context/AuthContext';
+import NavbarDashboards from '../Components/NavbarDashboards';
 
-export default function Client() {
-  const navigate = useNavigate();
+export default function GoDashboard() {
+  const { user } = useAuth();
 
   useEffect(() => {
     window.history.pushState(null, "", window.location.href);
@@ -19,34 +18,15 @@ export default function Client() {
     };
   }, []);
 
-  const handleLogout = async () => {
-    try {
-      await axios.post(
-        `${baseUrl}/api/auth/logout`,
-        {},
-        {
-          withCredentials: true,
-        }
-      );
-
-      localStorage.removeItem("authToken");
-      localStorage.removeItem("user");
-
-      sessionStorage.clear();
-
-      navigate("/", { replace: true });
-    } catch (error) {
-      console.error("Logout error:", error);
-      localStorage.clear();
-      sessionStorage.clear();
-      navigate("/", { replace: true });
-    }
-  };
-
   return (
     <div>
-      <h1>Welcome to Client Dashboard</h1>
-      <button onClick={handleLogout}>Logout</button>
+      <NavbarDashboards />
+      <h1>Welcome to Go Dashboard</h1>
+      {user ? (
+        <h1>Hi {user.fullName || user.email}</h1>
+      ) : (
+        <h1>Loading...</h1>
+      )}
     </div>
   );
 }

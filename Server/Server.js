@@ -37,10 +37,13 @@ const User = require('./Routes/userRoutes')
 const goProjectRoutes = require('./Routes/goProjectRoutes')
 const proProjectRoutes = require('./Routes/proProjectRoutes')
 const Auth = require('./Routes/authRoutes');
+const allProjects = require('./Routes/allProjects')
+
 
 app.use('/api/users', User)
-app.use('/api/go-Projects', goProjectRoutes)
-app.use('/api/pro-Projects', proProjectRoutes)
+app.use('/api/go-projects', goProjectRoutes)
+app.use('/api/pro-projects', proProjectRoutes)
+app.use('/api/projects', allProjects)
 app.use('/api/auth', Auth)
 
 app.get('/', (req,res)=>{

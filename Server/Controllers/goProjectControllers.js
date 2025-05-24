@@ -103,6 +103,21 @@ const deleteGoProject = async (req, res) => {
   }
 };
 
+const getGoProjectsByUser = async (req, res) => {
+  try {
+    const userId = req.user._id; // Assuming you're using auth middleware that adds `req.user`
+
+    const userProjects = await GoProject.find({ postedBy: userId })
+      .populate('postedBy', 'fullName email')
+      .populate('assignedTo', 'fullName email')
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({ projects: userProjects });
+  } catch (error) {
+    console.error('Error fetching user projects:', error);
+    res.status(500).json({ error: 'Server error while fetching user projects' });
+  }
+};
 
 
-module.exports = { createGoProject, getAllGoProjects, updateGoProject, deleteGoProject };
+module.exports = { createGoProject, getAllGoProjects, updateGoProject, deleteGoProject, getGoProjectsByUser };
