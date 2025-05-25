@@ -151,7 +151,6 @@ const login = async (req, res) => {
 };
 
 const getMe = async (req, res) => {
-    console.log('I am getting called')
     try {
         const user = await User.findById(req.userId).select('-password');
         if (!user) {

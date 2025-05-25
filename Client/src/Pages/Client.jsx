@@ -24,45 +24,67 @@ const Client = () => {
     budget: "",
   });
   const [creatingProject, setCreatingProject] = useState(false);
+  const [error, setError] = useState(null);
 
   const baseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
 
+  // Check authentication status
+  useEffect(() => {
+    if (!user) {
+      navigate("/login");
+    }
+  }, [user, navigate]);
+
   // Fetch projects from backend
   useEffect(() => {
+    if (!user?._id) return;
+
+    // In your fetchProjects function:
     const fetchProjects = async () => {
       try {
         setLoading(true);
-        let endpoint = `${baseUrl}/api/projects/posted/${user._id}`; // Changed endpoint
-        if (projectType === "go")
-          endpoint = `${baseUrl}/api/go-projects/${user._id}`; // Changed endpoint
-        else if (projectType === "pro")
-          endpoint = `${baseUrl}/api/pro-projects/${user._id}`; // Changed endpoint
+        setError(null);
+
+        let endpoint;
+        switch (projectType) {
+          case "go":
+            endpoint = `${baseUrl}/api/go-projects/${user._id}`;
+            break;
+          case "pro":
+            endpoint = `${baseUrl}/api/pro-projects/${user._id}`;
+            break;
+          default:
+            endpoint = `${baseUrl}/api/projects/posted/${user._id}`;
+        }
 
         const response = await axios.get(endpoint, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("authToken")}`,
           },
           withCredentials: true,
-          params: {
-            // Add user ID as a parameter
-            userId: user._id,
-          },
         });
-        setProjects(response.data.projects);
+
+        setProjects(response.data.projects || []);
         setMessages(response.data.messages || []);
       } catch (error) {
         console.error("Error fetching projects:", error);
+        setError(
+          error.response?.data?.message ||
+            "Failed to load projects. Please try again."
+        );
       } finally {
         setLoading(false);
       }
     };
 
     fetchProjects();
-  }, [projectType, baseUrl, user._id]); // Added user._id to dependency array
+  }, [projectType, baseUrl, user?._id]);
 
   const handleCreateProject = async (e) => {
     e.preventDefault();
-    setCreatingProject(false);
+    setCreatingProject(true);
+    setError(null);
+
     try {
       const endpoint =
         newProject.type === "go"
@@ -103,10 +125,8 @@ const Client = () => {
         budget: "",
       });
     } catch (error) {
-      console.error(
-        "Error creating project:",
-        error.response?.data?.message || error.message
-      );
+      console.error("Error creating project:", error);
+      setError(error.response?.data?.message || "Failed to create project");
     } finally {
       setCreatingProject(false);
     }
@@ -148,60 +168,69 @@ const Client = () => {
     </div>
   );
 
-  const renderProjectCard = (project) => (
-    <div key={project._id} className="project-card">
-      <div className="project-header">
-        <h3>{project.title}</h3>
-        <span className={`status-badge ${getStatusBadgeClass(project.status)}`}>
-          {project.status}
-        </span>
-      </div>
+  const renderProjectCard = (project) => {
+    if (!project?._id) return null;
 
-      <p className="project-description">{project.description}</p>
+    return (
+      <div key={project._id} className="project-card">
+        <div className="project-header">
+          <h3>{project.title}</h3>
+          <span
+            className={`status-badge ${getStatusBadgeClass(project.status)}`}
+          >
+            {project.status}
+          </span>
+        </div>
 
-      <div className="project-details">
-        {project.type === "go" ? (
-          <>
-            <div className="detail-item">
-              <span className="detail-label">Location:</span>
-              <span>
-                {project.city}
-                {project.subCity ? `, ${project.subCity}` : ""}
-              </span>
-            </div>
-            <div className="detail-item">
-              <span className="detail-label">Category:</span>
-              <span>{project.category}</span>
-            </div>
-          </>
-        ) : (
-          <>
-            <div className="detail-item">
-              <span className="detail-label">Budget:</span>
-              <span>₹{project.budget?.toLocaleString()}</span>
-            </div>
-            <div className="detail-item">
-              <span className="detail-label">Due Date:</span>
-              <span>{new Date(project.dueDate).toLocaleDateString()}</span>
-            </div>
-            <div className="detail-item">
-              <span className="detail-label">Applicants:</span>
-              <span>{project.applicants?.length || 0}</span>
-            </div>
-          </>
-        )}
-      </div>
+        <p className="project-description">{project.description}</p>
 
-      <div className="project-actions">
-        <Link to={`/projects/${project._id}`} className="view-btn">
-          View Details
-        </Link>
-        {project.status === "yet to be assigned" && (
-          <button className="edit-btn">Edit</button>
-        )}
+        <div className="project-details">
+          {project.type === "go" ? (
+            <>
+              <div className="detail-item">
+                <span className="detail-label">Location:</span>
+                <span>
+                  {project.city}
+                  {project.subCity ? `, ${project.subCity}` : ""}
+                </span>
+              </div>
+              <div className="detail-item">
+                <span className="detail-label">Category:</span>
+                <span>{project.category}</span>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="detail-item">
+                <span className="detail-label">Budget:</span>
+                <span>₹{project.budget?.toLocaleString()}</span>
+              </div>
+              <div className="detail-item">
+                <span className="detail-label">Due Date:</span>
+                <span>{new Date(project.dueDate).toLocaleDateString()}</span>
+              </div>
+              <div className="detail-item">
+                <span className="detail-label">Applicants:</span>
+                <span>{project.applicants?.length || 0}</span>
+              </div>
+            </>
+          )}
+        </div>
+
+        <div className="project-actions">
+          <Link
+            to={`/${project.type}-projects/${project._id}`}
+            className="view-btn"
+          >
+            View Details
+          </Link>
+          {project.status === "yet to be assigned" && (
+            <button className="edit-btn">Edit</button>
+          )}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const renderCreateProjectModal = () => (
     <div className="modal-overlay">
@@ -348,49 +377,62 @@ const Client = () => {
     </div>
   );
 
+  if (!user) {
+    return <div className="loading-spinner">Redirecting to login...</div>;
+  }
+
   return (
     <>
       <NavbarDashboards />
       <div className="client-dashboard">
-        <div className="dashboard-header">
-          <h1>Welcome back, {user?.fullName || "Client"}!</h1>
-          <p>Manage your {projectType === "all" ? "" : projectType} projects</p>
-        </div>
-
-        {renderProjectTypeFilter()}
-
-        <div className="dashboard-actions">
-          <button
-            className="new-project-btn"
-            onClick={() => setShowCreateModal(true)}
-          >
-            + New Project
-          </button>
-        </div>
-
-        {loading ? (
-          <div className="loading-spinner">Loading...</div>
-        ) : (
-          <div className="projects-grid">
-            {projects.length > 0 ? (
-              projects.map(renderProjectCard)
-            ) : (
-              <div className="no-projects">
-                <p>
-                  No {projectType === "all" ? "" : projectType} projects found
-                </p>
-                <button
-                  className="create-first-btn"
-                  onClick={() => setShowCreateModal(true)}
-                >
-                  Create your first project
-                </button>
-              </div>
-            )}
+        <div className="dashboard-content-wrapper">
+          <div className="dashboard-header">
+            <h1>Welcome back, {user.fullName || "Client"}!</h1>
+            <p>
+              Manage your {projectType === "all" ? "" : projectType} projects
+            </p>
           </div>
-        )}
 
-        {showCreateModal && renderCreateProjectModal()}
+          {error && (
+            <div className="error-message">
+              {error}
+              <button onClick={() => window.location.reload()}>Retry</button>
+            </div>
+          )}
+
+          {renderProjectTypeFilter()}
+
+          <div className="dashboard-actions">
+            <button
+              className="new-project-btn"
+              onClick={() => setShowCreateModal(true)}
+            >
+              + New Project
+            </button>
+          </div>
+
+          {loading ? (
+            <div className="loading-spinner">Loading projects...</div>
+          ) : projects.length > 0 ? (
+            <div className="projects-grid">
+              {projects.map(renderProjectCard)}
+            </div>
+          ) : (
+            <div className="no-projects">
+              <p>
+                No {projectType === "all" ? "" : projectType} projects found
+              </p>
+              <button
+                className="create-first-btn"
+                onClick={() => setShowCreateModal(true)}
+              >
+                Create your first project
+              </button>
+            </div>
+          )}
+
+          {showCreateModal && renderCreateProjectModal()}
+        </div>
       </div>
     </>
   );

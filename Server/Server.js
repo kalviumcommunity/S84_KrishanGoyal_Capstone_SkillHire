@@ -46,11 +46,11 @@ app.use('/api/pro-projects', proProjectRoutes)
 app.use('/api/projects', allProjects)
 app.use('/api/auth', Auth)
 
-app.get('/', (req,res)=>{
-    res.json('This is Home Route')
+app.get('/', (req, res) => {
+  res.json('This is Home Route')
 })
 
-app.listen(port, async()=>{
-    console.log(`Server is running at http://localhost:${port}`)
-    await connectToDb(db)
+app.listen(port, async () => {
+  console.log(`Server is running at http://localhost:${port}`)
+  await connectToDb(db)
 })

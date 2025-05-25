@@ -1,20 +1,30 @@
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
 /* Client Dashboard Container */
 .client-dashboard {
-  max-width: 1200px;
-  margin: 2rem auto;
-  padding: 0 1.5rem;
+  min-height: 100vh;
+  width: 100%;
+  padding: 0;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   color: #2d3436;
   background-color: #f8f9fa;
-  border-radius: 10px;
 }
 
-/* Dashboard Header */
+
+.dashboard-content-wrapper {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+
 .dashboard-header {
-  margin-bottom: 2rem;
+  margin: 0 -1.5rem 2rem -1.5rem;
   padding: 1.5rem;
   background: white;
-  border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
@@ -89,12 +99,24 @@
   display: grid;
   grid-template-columns: 1fr;
   gap: 1.5rem;
-  padding: 0 1.5rem;
+  padding: 0;
 }
 
 @media (min-width: 768px) {
   .projects-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .dashboard-content-wrapper {
+    padding: 1rem;
+  }
+  
+  .dashboard-header,
+  .project-filter {
+    margin-left: -1rem;
+    margin-right: -1rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
   }
 }
 
