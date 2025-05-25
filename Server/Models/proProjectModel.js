@@ -5,12 +5,16 @@ const proProjectSchema = new Schema({
     title: { type: String, required: true },
     description: { type: String, required: true },
     dueDate: { type: Date },
-    postedBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    postedBy: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
     assignedTo: { type: Schema.Types.ObjectId, ref: 'User', default: null },
     status: { type: String, enum: ['yet to be assigned', 'assigned but not completed', 'completed'], default: 'yet to be assigned' },
     budget: { type: Number, required: true },
     applicants: [{ type: Schema.Types.ObjectId, ref: 'User' }],
-    bidValues: { type: Number, default: 0 }
+    bidValues: { type: Number, default: 0 },
+    type: {
+        type: String,
+        default: 'pro'
+    },
 }, {
     timestamps: true,
     toJSON: {

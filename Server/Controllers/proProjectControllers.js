@@ -47,29 +47,6 @@ const createProProject = async (req, res) => {
   }
 };
 
-const getProProjects = async (req, res) => {
-  try {
-    const { postedBy } = req.query;
-
-    const filter = {};
-    if (postedBy) {
-      filter.postedBy = postedBy;
-    }
-
-    const projects = await ProProject.find(filter)
-      .populate('postedBy', 'fullName email')
-      .populate('assignedTo', 'fullName email');
-    res.status(200).json({
-      message: 'ProProjects fetched successfully',
-      count: projects.length,
-      projects
-    });
-  } catch (error) {
-    console.error('Error fetching ProProjects:', error);
-    res.status(500).json({ error: 'Server error while fetching projects' });
-  }
-};
-
 const updateProProject = async (req, res) => {
   try {
     const { id } = req.params;
@@ -138,4 +115,20 @@ const getMyProProjects = async (req, res) => {
   }
 };
 
-module.exports = { createProProject, getProProjects, updateProProject, deleteProProject, getMyProProjects };
+const getProProject = async (req, res) => {
+  try {
+    const project = await ProProject.findById(req.params.projectId)
+      .populate('postedBy', 'name email')
+      .populate('applicants', 'name email');
+      
+    if (!project) {
+      return res.status(404).json({ error: 'PRO Project not found' });
+    }
+    
+    res.json({ project });
+  } catch (error) {
+    res.status(500).json({ error: 'Server error fetching PRO project' });
+  }
+};
+
+module.exports = { createProProject, updateProProject, deleteProProject, getMyProProjects, getProProject };

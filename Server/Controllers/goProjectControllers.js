@@ -40,20 +40,6 @@ const createGoProject = async (req, res) => {
   }
 };
 
-const getAllGoProjects = async (req, res) => {
-  try {
-    const projects = await GoProject.find()
-      .populate('postedBy', 'fullName email')
-      .populate('assignedTo', 'fullName email')
-      .sort({ createdAt: -1 });
-
-    res.status(200).json({ projects });
-  } catch (error) {
-    console.error('Error fetching GoProjects:', error);
-    res.status(500).json({ error: 'Server error while fetching projects' });
-  }
-};
-
 const updateGoProject = async (req, res) => {
   try {
     const { id } = req.params;
@@ -105,7 +91,7 @@ const deleteGoProject = async (req, res) => {
 
 const getGoProjectsByUser = async (req, res) => {
   try {
-    const userId = req.user._id; // Assuming you're using auth middleware that adds `req.user`
+    const userId = req.user._id;
 
     const userProjects = await GoProject.find({ postedBy: userId })
       .populate('postedBy', 'fullName email')
@@ -119,5 +105,22 @@ const getGoProjectsByUser = async (req, res) => {
   }
 };
 
+const getGoProject = async (req, res) => {
+  try {
+    const project = await GoProject.findById(req.params.projectId)
+      .populate('postedBy', 'name email')
+      .populate('assignedTo', 'name email');
+      
+    if (!project) {
+      return res.status(404).json({ error: 'GO Project not found' });
+    }
+    
+    res.json({ project });
+  } catch (error) {
+    res.status(500).json({ error: 'Server error fetching GO project' });
+  }
+};
 
-module.exports = { createGoProject, getAllGoProjects, updateGoProject, deleteGoProject, getGoProjectsByUser };
+
+
+module.exports = { createGoProject, updateGoProject, deleteGoProject, getGoProjectsByUser, getGoProject };
