@@ -168,9 +168,13 @@ const googleAuth = async (req, res) => {
         const { token } = req.body;
 
         if (!token) {
-            return res.status(400).json({ error: 'Google token is required' });
+            return res.status(400).json({
+                success: false,
+                error: 'Google token is required'
+            });
         }
 
+        // Verify the Google token
         const ticket = await client.verifyIdToken({
             idToken: token,
             audience: process.env.GOOGLE_CLIENT_ID,
@@ -178,67 +182,61 @@ const googleAuth = async (req, res) => {
 
         const payload = ticket.getPayload();
 
-        if (!payload.email || !payload.name) {
-            return res.status(400).json({ error: 'Invalid Google token payload' });
+        if (!payload?.email_verified) {
+            return res.status(400).json({
+                success: false,
+                error: 'Google email not verified'
+            });
         }
 
-        const { email, name, picture } = payload;
+        const { email, name, picture, sub: googleId } = payload;
 
-        let user = await User.findOne({ email });
+        // Find or create user
+        let user = await User.findOne({
+            $or: [{ email }, { googleId }]
+        });
 
         if (!user) {
             user = await User.create({
                 fullName: name,
                 email,
                 avatar: picture,
+                googleId,
                 isVerified: true,
                 authProvider: 'google',
-                role: 'client'
-            });
-        } else if (user.authProvider !== 'google') {
-            return res.status(400).json({
-                error: 'Account exists with email/password. Please login normally.'
+                role: 'client' // Default role
             });
         }
 
+        // Generate JWT token
         const authToken = jwt.sign(
-            { id: user._id, email: user.email, role: user.role },
+            {
+                id: user._id,
+                email: user.email,
+                role: user.role
+            },
             process.env.JWT_SECRET,
             { expiresIn: '1h' }
         );
 
-        res.cookie('token', token, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'None',
-            maxAge: 60 * 60 * 1000,
-        });
-
-        const userData = {
-            _id: user._id,
-            fullName: user.fullName,
-            email: user.email,
-            avatar: user.avatar,
-            role: user.role,
-            isVerified: user.isVerified
-        };
-
-        res.status(200).json({
-            message: 'Google authentication successful',
-            user: userData,
+        return res.status(200).json({
+            success: true,
+            user: {
+                _id: user._id,
+                fullName: user.fullName,
+                email: user.email,
+                avatar: user.avatar,
+                role: user.role,
+                isVerified: user.isVerified
+            },
             token: authToken
         });
 
     } catch (error) {
-        let errorMessage = 'Google authentication failed';
-        if (error.message.includes('Token used too late')) {
-            errorMessage = 'Session expired. Please try again.';
-        } else if (error.message.includes('Invalid token signature')) {
-            errorMessage = 'Invalid authentication token.';
-        }
-
-        res.status(401).json({
-            error: errorMessage,
+        console.error('Google auth error:', error);
+        return res.status(401).json({
+            success: false,
+            error: 'Google authentication failed',
             details: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
     }

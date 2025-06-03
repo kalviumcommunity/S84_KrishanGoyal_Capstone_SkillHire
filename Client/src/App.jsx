@@ -9,6 +9,7 @@ import GoDashboard from "./Pages/GoDashboard";
 import Client from "./Pages/Client";
 import ProfilePage from "./Pages/ProfilePage";
 import ProjectDetails from "./Components/ProjectDetails";
+import AllProProjects from "./Pages/AllProProjects";
 
 function App() {
   return (
@@ -30,6 +31,7 @@ function App() {
           path="/pro-projects/:projectId"
           element={<ProjectDetails type="pro" />}
         />
+        <Route path="/pro-projects" element={<AllProProjects/>}/>
       </Routes>
     </>
   );
