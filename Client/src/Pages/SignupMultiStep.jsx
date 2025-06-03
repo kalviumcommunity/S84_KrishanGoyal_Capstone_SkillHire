@@ -6,7 +6,7 @@ import axios from "axios";
 import { useAuth } from "../context/AuthContext";
 import "../Styles/SignupMultiStep.css";
 
-const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+const baseUrl = import.meta.env.VITE_API_BASE_URL;
 const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
 export default function SignupMultiStep() {
@@ -95,30 +95,35 @@ export default function SignupMultiStep() {
     setError(null);
 
     try {
-      const decoded = jwtDecode(credentialResponse.credential);
-      const { name, email, picture } = decoded;
-
       const response = await axios.post(
-        `${baseUrl}/api/auth/google-auth`,
+        `${baseUrl}/api/auth/google`,
+        { token: credentialResponse.credential },
         {
-          token: credentialResponse.credential,
-          user: { name, email, picture },
-        },
-        {
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
           withCredentials: true,
         }
       );
 
-      if (response.data.token && response.data.user) {
+      if (response.data?.success) {
         await login(response.data.user, response.data.token);
-        navigate("/dashboard");
+
+        // Redirect based on user role or to profile completion
+        if (!response.data.user.role) {
+          setStep(2); // Go to profile completion
+        } else {
+          navigate(`/${response.data.user.role}`, { replace: true });
+        }
       } else {
-        throw new Error("Invalid response from server");
+        throw new Error(response.data?.error || "Authentication failed");
       }
     } catch (error) {
       console.error("Google login error:", error);
       setError(
         error.response?.data?.error ||
+          error.message ||
           "Google authentication failed. Please try again."
       );
     } finally {
@@ -171,64 +176,67 @@ export default function SignupMultiStep() {
     setError(null);
 
     try {
-        const token = localStorage.getItem("authToken");
-        if (!token) {
-            throw new Error("No authentication token found");
+      const token = localStorage.getItem("authToken");
+      if (!token) {
+        throw new Error("No authentication token found");
+      }
+
+      const payload = {
+        role: form.role,
+      };
+
+      if (form.role === "go-worker") {
+        payload.goSkills = form.goSkills;
+        payload.hourlyRate = form.hourlyRate;
+        payload.location = form.location;
+      } else if (form.role === "pro-worker") {
+        payload.proSkills = form.proSkills;
+        payload.portfolioUrl = form.portfolioUrl;
+        payload.minProjectRate = form.minProjectRate;
+      }
+
+      const axiosInstance = axios.create({
+        baseURL: baseUrl,
+        withCredentials: true,
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const res = await axiosInstance.post(
+        "/api/auth/complete-profile",
+        payload
+      );
+
+      if (res.data.token && res.data.user) {
+        await login(res.data.user, res.data.token);
+
+        switch (form.role) {
+          case "client":
+            navigate("/client", { replace: true });
+            break;
+          case "go-worker":
+            navigate("/go", { replace: true });
+            break;
+          case "pro-worker":
+            navigate("/pro", { replace: true });
+            break;
+          default:
+            alert("Error in checking the role of user");
         }
-
-        const payload = {
-            role: form.role,
-        };
-
-        if (form.role === "go-worker") {
-            payload.goSkills = form.goSkills;
-            payload.hourlyRate = form.hourlyRate;
-            payload.location = form.location;
-        } else if (form.role === "pro-worker") {
-            payload.proSkills = form.proSkills;
-            payload.portfolioUrl = form.portfolioUrl;
-            payload.minProjectRate = form.minProjectRate;
-        }
-
-        const axiosInstance = axios.create({
-            baseURL: baseUrl,
-            withCredentials: true,
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            }
-        });
-
-        const res = await axiosInstance.post('/api/auth/complete-profile', payload);
-
-        if (res.data.token && res.data.user) {
-            await login(res.data.user, res.data.token);
-            
-            switch (form.role) {
-                case "client":
-                    navigate("/client", {replace: true});
-                    break;
-                case "go-worker":
-                    navigate("/go", {replace: true});
-                    break;
-                case "pro-worker":
-                    navigate("/pro", {replace: true});
-                    break;
-                default:
-                    alert("Error in checking the role of user");
-            }
-        } else {
-            throw new Error("Invalid response from server");
-        }
+      } else {
+        throw new Error("Invalid response from server");
+      }
     } catch (err) {
-        setError(
-            err.response?.data?.error ||
-            "Failed to complete profile. Please try again."
-        );
+      setError(
+        err.response?.data?.error ||
+          "Failed to complete profile. Please try again."
+      );
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
-};
+  };
 
   return (
     <GoogleOAuthProvider clientId={googleClientId}>
@@ -403,7 +411,7 @@ export default function SignupMultiStep() {
                     </div>
 
                     <div className="form-group">
-                      <label>Hourly Rate ($)</label>
+                      <label>Hourly Rate (₹)</label>
                       <input
                         type="number"
                         name="hourlyRate"
@@ -490,7 +498,7 @@ export default function SignupMultiStep() {
                     </div>
 
                     <div className="form-group">
-                      <label>Minimum Project Rate ($)</label>
+                      <label>Minimum Project Rate (₹)</label>
                       <input
                         type="number"
                         name="minProjectRate"

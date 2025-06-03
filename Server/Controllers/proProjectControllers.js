@@ -31,7 +31,7 @@ const createProProject = async (req, res) => {
 
     await newProject.save();
 
-        await User.findByIdAndUpdate(
+    await User.findByIdAndUpdate(
       req.user._id,
       { $push: { postedJobs: newProject._id } }
     );
@@ -102,6 +102,7 @@ const getMyProProjects = async (req, res) => {
     const projects = await ProProject.find({ postedBy: userId })
       .populate('postedBy', 'fullName email')
       .populate('assignedTo', 'fullName email')
+      .populate('applicants.user', 'fullName email')
       .sort({ createdAt: -1 });
 
     res.status(200).json({
@@ -118,17 +119,90 @@ const getMyProProjects = async (req, res) => {
 const getProProject = async (req, res) => {
   try {
     const project = await ProProject.findById(req.params.projectId)
-      .populate('postedBy', 'name email')
-      .populate('applicants', 'name email');
-      
+      .populate('postedBy', 'fullName email')
+      .populate('assignedTo', 'fullName email')
+      .populate('applicants.user', 'fullName email');
+
     if (!project) {
       return res.status(404).json({ error: 'PRO Project not found' });
     }
-    
+
     res.json({ project });
   } catch (error) {
     res.status(500).json({ error: 'Server error fetching PRO project' });
   }
 };
 
-module.exports = { createProProject, updateProProject, deleteProProject, getMyProProjects, getProProject };
+const getAssignedProProjects = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const projects = await ProProject.find({ assignedTo: userId })
+      .populate('postedBy', 'fullName email')
+      .populate('assignedTo', 'fullName email')
+      .sort({ createdAt: -1 });
+    res.status(200).json({ projects });
+  } catch (error) {
+    res.status(500).json({ error: 'Server error while fetching assigned projects' });
+  }
+};
+
+const getProEarnings = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const completedProjects = await ProProject.find({ assignedTo: userId, status: 'completed' });
+    const total = completedProjects.reduce((sum, p) => sum + (p.budget || 0), 0);
+
+    const pendingProjects = await ProProject.find({ assignedTo: userId, status: 'assigned but not completed' });
+    const pending = pendingProjects.reduce((sum, p) => sum + (p.budget || 0), 0);
+
+    const recentTransactions = completedProjects
+      .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
+      .slice(0, 5)
+      .map(p => ({
+        title: p.title,
+        amount: p.budget,
+        date: p.updatedAt,
+      }));
+
+    res.json({
+      earnings: {
+        total,
+        pending,
+        completed: completedProjects.length,
+      },
+      transactions: recentTransactions,
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Server error fetching earnings' });
+  }
+};
+
+const getAllAvailableProProjects = async (req, res) => {
+  try {
+    const projects = await ProProject.find({ assignedTo: null });
+    res.json({ projects });
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+const applyToProProject = async (req, res) => {
+  try {
+    const project = await ProProject.findById(req.params.projectId);
+    if (!project) return res.status(404).json({ error: 'Project not found' });
+
+    // Prevent duplicate applications
+    if (project.applicants.some(a => a.user.toString() === req.user._id.toString())) {
+      return res.status(400).json({ error: 'Already applied' });
+    }
+
+    const { pitch } = req.body;
+    project.applicants.push({ user: req.user._id, pitch });
+    await project.save();
+    res.json({ message: 'Interest shown successfully' });
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+module.exports = { createProProject, updateProProject, deleteProProject, getMyProProjects, getProProject, getAssignedProProjects, getProEarnings, getAllAvailableProProjects, applyToProProject };

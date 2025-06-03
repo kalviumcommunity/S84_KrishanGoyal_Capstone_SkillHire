@@ -4,12 +4,26 @@ const { Schema, model } = require('mongoose');
 const proProjectSchema = new Schema({
     title: { type: String, required: true },
     description: { type: String, required: true },
-    dueDate: { type: Date },
+    dueDate: {
+        type: Date,
+        required: true,
+        validate: {
+            validator: function (value) {
+                return value > new Date();
+            },
+            message: 'Due date must be in the future'
+        }
+    },
     postedBy: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
     assignedTo: { type: Schema.Types.ObjectId, ref: 'User', default: null },
     status: { type: String, enum: ['yet to be assigned', 'assigned but not completed', 'completed'], default: 'yet to be assigned' },
     budget: { type: Number, required: true },
-    applicants: [{ type: Schema.Types.ObjectId, ref: 'User' }],
+    applicants: [
+        {
+            user: { type: Schema.Types.ObjectId, ref: 'User' },
+            pitch: { type: String }
+        }
+    ],
     bidValues: { type: Number, default: 0 },
     type: {
         type: String,

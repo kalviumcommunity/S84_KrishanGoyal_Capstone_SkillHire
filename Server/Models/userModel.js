@@ -20,7 +20,6 @@ const UserSchema = new Schema({
   isProfileComplete: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now },
 
-  // Job posting (clients & pro-workers for pro jobs only)
   postedJobs: [{
     type: ObjectId,
     ref: 'Job'
@@ -50,6 +49,10 @@ const UserSchema = new Schema({
   portfolioUrl: String,
   minProjectRate: Number,
   completedProjects: { type: Number, default: 0 },
+  totalEarnings:{type: Number, default: 0},
+  onGoingProjects:{type: Number, default: 0},
+  completedproject:{type: Number, default: 0},
+  pendingPayments: {type: Number, default: 0},
 
   // Shared for workers
   ratingsReceived: [{

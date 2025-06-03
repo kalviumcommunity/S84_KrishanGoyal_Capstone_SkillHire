@@ -11,7 +11,7 @@ const Client = () => {
   const [projects, setProjects] = useState([]);
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [projectType, setProjectType] = useState("all"); // 'all', 'go', 'pro'
+  const [projectType, setProjectType] = useState("all");
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newProject, setNewProject] = useState({
     type: "go",
@@ -26,20 +26,17 @@ const Client = () => {
   const [creatingProject, setCreatingProject] = useState(false);
   const [error, setError] = useState(null);
 
-  const baseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
+  const baseUrl = import.meta.env.VITE_API_BASE_URL;
 
-  // Check authentication status
   useEffect(() => {
     if (!user) {
       navigate("/login");
     }
   }, [user, navigate]);
 
-  // Fetch projects from backend
   useEffect(() => {
     if (!user?._id) return;
 
-    // In your fetchProjects function:
     const fetchProjects = async () => {
       try {
         setLoading(true);
@@ -51,7 +48,7 @@ const Client = () => {
             endpoint = `${baseUrl}/api/go-projects/${user._id}`;
             break;
           case "pro":
-            endpoint = `${baseUrl}/api/pro-projects/${user._id}`;
+            endpoint = `${baseUrl}/api/pro-projects/my/${user._id}`;
             break;
           default:
             endpoint = `${baseUrl}/api/projects/posted/${user._id}`;
@@ -344,6 +341,7 @@ const Client = () => {
                     onChange={(e) =>
                       setNewProject({ ...newProject, dueDate: e.target.value })
                     }
+                    min={new Date().toISOString().split("T")[0]}
                   />
                 </div>
               </>
