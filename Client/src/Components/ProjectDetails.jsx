@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useAuth } from "../context/AuthContext";
-
 import "../Styles/ProjectDetails.css";
 
 const baseUrl = import.meta.env.VITE_API_BASE_URL;
@@ -14,6 +13,15 @@ const ProjectDetails = ({ type }) => {
   const [project, setProject] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showApplicantsModal, setShowApplicantsModal] = useState(false);
+  const [assigning, setAssigning] = useState(false);
+  const [selectedApplicant, setSelectedApplicant] = useState("");
+  const [showPitchModal, setShowPitchModal] = useState(false);
+  const [pitch, setPitch] = useState("");
+  const [submittingPitch, setSubmittingPitch] = useState(false);
+  const [successMessage, setSuccessMessage] = useState(""); // For all actions
+  const [deleting, setDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => {
     const fetchProject = async () => {
@@ -61,9 +69,99 @@ const ProjectDetails = ({ type }) => {
     } else if (user?.role === "go-worker") {
       navigate("/go");
     } else if (user?.role === "client") {
-      navigate("/client");
+      navigate("/your-projects");
     } else {
       navigate("/");
+    }
+  };
+
+  // Assign project to applicant
+  const handleAssign = async () => {
+    if (!selectedApplicant) return;
+    setAssigning(true);
+    try {
+      await axios.post(
+        `${baseUrl}/api/pro-projects/${project._id}/assign`,
+        { userId: selectedApplicant },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+          },
+          withCredentials: true,
+        }
+      );
+      setSuccessMessage("Project assigned successfully!");
+      setTimeout(() => setSuccessMessage(""), 2000);
+      setTimeout(() => window.location.reload(), 2000);
+    } catch (err) {
+      alert(
+        err.response?.data?.error ||
+          err.response?.data?.message ||
+          "Failed to assign project"
+      );
+    } finally {
+      setAssigning(false);
+    }
+  };
+
+  // Show pitch modal
+  const handleShowInterest = () => {
+    setPitch("");
+    setShowPitchModal(true);
+  };
+
+  // Submit pitch
+  const handlePitchSubmit = async (e) => {
+    e.preventDefault();
+    setSubmittingPitch(true);
+    try {
+      await axios.post(
+        `${baseUrl}/api/pro-projects/${project._id}/apply`,
+        { pitch },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+          },
+          withCredentials: true,
+        }
+      );
+      setSuccessMessage("Your pitch has been submitted successfully!");
+      setPitch("");
+      setTimeout(() => setSuccessMessage(""), 2000);
+      setTimeout(() => setShowPitchModal(false), 1500);
+    } catch (err) {
+      alert(
+        err.response?.data?.error ||
+          err.response?.data?.message ||
+          "Failed to submit pitch"
+      );
+    } finally {
+      setSubmittingPitch(false);
+    }
+  };
+
+  // --- DELETE PROJECT HANDLER ---
+  const handleDeleteProject = async () => {
+    setDeleting(true);
+    try {
+      await axios.delete(`${baseUrl}/api/pro-projects/${project._id}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+        },
+        withCredentials: true,
+      });
+      setShowDeleteConfirm(false);
+      setSuccessMessage("Project deleted successfully!");
+      setTimeout(() => setSuccessMessage(""), 2000);
+      setTimeout(() => navigate("/your-projects"), 2000);
+    } catch (err) {
+      alert(
+        err.response?.data?.error ||
+          err.response?.data?.message ||
+          "Failed to delete project"
+      );
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -111,8 +209,18 @@ const ProjectDetails = ({ type }) => {
     );
   }
 
+  const myApplication =
+    user?.role === "pro-worker"
+      ? project.applicants?.find((app) => app.user?._id === user._id)
+      : null;
+
   return (
     <div className="project-details-container">
+      {/* Success Alert */}
+      {successMessage && (
+        <div className="custom-success-alert">{successMessage}</div>
+      )}
+
       <div className="project-details-header">
         <h1>{project.title}</h1>
         <span className={`status-badge ${getStatusBadgeClass(project.status)}`}>
@@ -126,73 +234,94 @@ const ProjectDetails = ({ type }) => {
           <p>{project.description}</p>
         </div>
 
-        {type === "go" ? (
-          <div className="go-project-details">
-            <div className="detail-section">
-              <h3>Location</h3>
-              <p>
-                {project.city}
-                {project.subCity ? `, ${project.subCity}` : ""}
-              </p>
-            </div>
-            <div className="detail-section">
-              <h3>Category</h3>
-              <p>{project.category}</p>
-            </div>
-            <div className="detail-section">
-              <h3>Posted On</h3>
-              <p>{new Date(project.createdAt).toLocaleDateString()}</p>
-            </div>
+        <div className="pro-project-details">
+          <div className="detail-section">
+            <h3>Budget</h3>
+            <p>₹{project.budget?.toLocaleString()}</p>
           </div>
-        ) : (
-          <div className="pro-project-details">
-            <div className="detail-section">
-              <h3>Budget</h3>
-              <p>₹{project.budget?.toLocaleString()}</p>
-            </div>
-            <div className="detail-section">
-              <h3>Due Date</h3>
-              <p>{new Date(project.dueDate).toLocaleDateString()}</p>
-            </div>
-            <div className="detail-section">
-              <h3>Applicants</h3>
-              <p>{project.applicants?.length || 0}</p>
-            </div>
-            {/* Applicant Details & Pitches */}
-            {project.applicants && project.applicants.length > 0 && (
-              <div className="detail-section">
-                <h3>Applicant Details & Pitches</h3>
-                <ul>
+          <div className="detail-section">
+            <h3>Due Date</h3>
+            <p>{new Date(project.dueDate).toLocaleDateString()}</p>
+          </div>
+          <div className="detail-section">
+            <h3>Applicants</h3>
+            <p>
+              {project.applicants?.length || 0}
+              {user?.role === "client" &&
+                project.applicants &&
+                project.applicants.length > 0 && (
+                  <button
+                    className="view-applicants-btn"
+                    style={{ marginLeft: "10px" }}
+                    onClick={() => setShowApplicantsModal(true)}
+                  >
+                    View Applications
+                  </button>
+                )}
+            </p>
+          </div>
+
+          {/* Assign To Section (Client only) */}
+          {user?.role === "client" &&
+            project.status === "yet to be assigned" &&
+            project.applicants?.length > 0 && (
+              <div className="detail-section assign-section">
+                <h3>Assign To</h3>
+                <select
+                  value={selectedApplicant}
+                  onChange={(e) => setSelectedApplicant(e.target.value)}
+                  className="assign-dropdown"
+                >
+                  <option value="">Select applicant</option>
                   {project.applicants.map((app, idx) => (
-                    <li key={app.user?._id || idx} style={{ marginBottom: "10px" }}>
-                      <strong>{app.user?.fullName || app.user?.email || "Unknown User"}</strong>
-                      <br />
-                      <span style={{ fontStyle: "italic" }}>Pitch:</span> {app.pitch}
-                    </li>
+                    <option key={app.user?._id || idx} value={app.user?._id}>
+                      {app.user?.fullName ||
+                        app.user?.email ||
+                        "Unknown User"}
+                    </option>
                   ))}
-                </ul>
+                </select>
+                <button
+                  className={`assign-btn${selectedApplicant && !assigning ? " assign-btn-green" : ""}`}
+                  disabled={!selectedApplicant || assigning}
+                  onClick={handleAssign}
+                  style={{ marginLeft: "10px" }}
+                >
+                  {assigning ? "Assigning..." : "Assign"}
+                </button>
               </div>
             )}
-            <div className="detail-section">
-              <h3>Posted By</h3>
-              <p>
-                {project.postedBy?.fullName}
-              </p>
-            </div>
-            <div className="detail-section">
-              <h3>Posted On</h3>
-              <p>{new Date(project.createdAt).toLocaleDateString()}</p>
-            </div>
-          </div>
-        )}
 
-        {project.status === "assigned but not completed" &&
-          project.assignedTo && (
-            <div className="assigned-section">
-              <h3>Assigned To</h3>
-              <p>{project.assignedTo.name || project.assignedTo.email}</p>
-            </div>
-          )}
+          {/* Show Interest or Show Pitch (Pro user only) */}
+          {user?.role === "pro-worker" &&
+            project.status === "yet to be assigned" &&
+            (myApplication ? (
+              <div className="detail-section">
+                <h3>Your Pitch</h3>
+                <blockquote className="your-pitch-blockquote">
+                  {myApplication.pitch}
+                </blockquote>
+              </div>
+            ) : (
+              <div className="detail-section">
+                <button
+                  className="show-interest-btn"
+                  onClick={handleShowInterest}
+                >
+                  Show Interest
+                </button>
+              </div>
+            ))}
+
+          <div className="detail-section">
+            <h3>Posted By</h3>
+            <p>{project.postedBy?.fullName}</p>
+          </div>
+          <div className="detail-section">
+            <h3>Posted On</h3>
+            <p>{new Date(project.createdAt).toLocaleDateString()}</p>
+          </div>
+        </div>
 
         <div className="project-actions">
           <button onClick={handleBack} className="back-btn">
@@ -200,6 +329,129 @@ const ProjectDetails = ({ type }) => {
           </button>
         </div>
       </div>
+
+      {/* Floating Delete Button (Client only, not assigned) */}
+      {user?.role === "client" && project.status === "yet to be assigned" && (
+        <div className="floating-delete-container">
+          <button
+            className="delete-btn floating-delete-btn"
+            onClick={() => setShowDeleteConfirm(true)}
+            disabled={deleting}
+          >
+            {deleting ? "Deleting..." : "Delete Project"}
+          </button>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="modal-overlay">
+          <div className="modal-content delete-confirm-modal">
+            <h3>Delete Project?</h3>
+            <p>
+              Are you sure you want to delete this project? <br />
+              <span style={{ color: "#e53935" }}>
+                This action cannot be undone.
+              </span>
+            </p>
+            <div className="delete-confirm-actions">
+              <button
+                className="btn-outline"
+                onClick={() => setShowDeleteConfirm(false)}
+                disabled={deleting}
+              >
+                Cancel
+              </button>
+              <button
+                className="delete-btn"
+                onClick={handleDeleteProject}
+                disabled={deleting}
+                style={{ marginLeft: "12px" }}
+              >
+                {deleting ? "Deleting..." : "Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Applicants Modal */}
+      {showApplicantsModal && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h3>Applicants & Pitches</h3>
+            <div className="applicants-list">
+              {project.applicants.map((app, idx) => (
+                <div className="applicant-card" key={app.user?._id || idx}>
+                  <div className="applicant-header">
+                    <span className="applicant-name">
+                      {app.user?.fullName || app.user?.email || "Unknown User"}
+                    </span>
+                    <button
+                      className="contact-btn"
+                      onClick={() => {
+                        alert(
+                          `Start chat with ${app.user?.fullName || app.user?.email}`
+                        );
+                      }}
+                    >
+                      Contact
+                    </button>
+                  </div>
+                  <div className="applicant-pitch">
+                    <span>Pitch:</span>
+                    <blockquote>{app.pitch}</blockquote>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <button
+              className="close-modal-btn"
+              onClick={() => setShowApplicantsModal(false)}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Show Interest Modal (Pro user only) */}
+      {user?.role === "pro-worker" && showPitchModal && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h3>Submit Your Pitch</h3>
+            <form onSubmit={handlePitchSubmit}>
+              <textarea
+                value={pitch}
+                onChange={(e) => setPitch(e.target.value)}
+                placeholder="Explain why you are the best fit for this project..."
+                required
+                rows={5}
+                style={{ width: "100%", marginBottom: "1rem" }}
+                disabled={submittingPitch}
+              />
+              <div>
+                <button
+                  type="submit"
+                  className="assign-btn"
+                  disabled={submittingPitch}
+                >
+                  {submittingPitch ? "Submitting..." : "Submit Pitch"}
+                </button>
+                <button
+                  type="button"
+                  className="close-modal-btn"
+                  style={{ marginLeft: "10px" }}
+                  onClick={() => setShowPitchModal(false)}
+                  disabled={submittingPitch}
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -42,7 +42,6 @@ const createProProject = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error creating ProProject:', error);
     res.status(500).json({ error: 'Server error while creating project' });
   }
 };
@@ -68,7 +67,6 @@ const updateProProject = async (req, res) => {
       project: updatedProject
     });
   } catch (error) {
-    console.error('Error updating ProProject:', error);
     res.status(500).json({ error: 'Server error while updating project' });
   }
 };
@@ -90,7 +88,6 @@ const deleteProProject = async (req, res) => {
 
     res.status(200).json({ message: 'ProProject deleted successfully' });
   } catch (error) {
-    console.error('Error deleting ProProject:', error);
     res.status(500).json({ error: 'Server error while deleting project' });
   }
 };
@@ -111,7 +108,6 @@ const getMyProProjects = async (req, res) => {
       projects,
     });
   } catch (error) {
-    console.error('Error fetching user ProProjects:', error);
     res.status(500).json({ error: 'Server error while fetching user projects' });
   }
 };
@@ -188,21 +184,90 @@ const getAllAvailableProProjects = async (req, res) => {
 
 const applyToProProject = async (req, res) => {
   try {
-    const project = await ProProject.findById(req.params.projectId);
-    if (!project) return res.status(404).json({ error: 'Project not found' });
-
-    // Prevent duplicate applications
-    if (project.applicants.some(a => a.user.toString() === req.user._id.toString())) {
-      return res.status(400).json({ error: 'Already applied' });
+    // Check if user is a professional
+    if (req.user.role !== 'pro-worker') {
+      return res.status(403).json({ error: 'Only professional workers can apply to projects' });
     }
 
     const { pitch } = req.body;
+    if (!pitch) {
+      return res.status(400).json({ error: 'Pitch is required' });
+    }
+
+    const project = await ProProject.findById(req.params.projectId);
+    if (!project) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+
+    // Check if project is already assigned
+    if (project.assignedTo) {
+      return res.status(400).json({ error: 'Project is already assigned' });
+    }
+
+    // Initialize applicants array if it doesn't exist
+    if (!project.applicants) {
+      project.applicants = [];
+    }
+
+    // Prevent duplicate applications
+    if (project.applicants.some(a => a.user && a.user.toString() === req.user._id.toString())) {
+      return res.status(400).json({ error: 'You have already applied to this project' });
+    }
+
     project.applicants.push({ user: req.user._id, pitch });
     await project.save();
-    res.json({ message: 'Interest shown successfully' });
+
+    res.status(200).json({
+      message: 'Application submitted successfully',
+      project
+    });
   } catch (err) {
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Failed to submit application. Please try again.' });
   }
 };
 
-module.exports = { createProProject, updateProProject, deleteProProject, getMyProProjects, getProProject, getAssignedProProjects, getProEarnings, getAllAvailableProProjects, applyToProProject };
+const getAppliedProjects = async (req, res) => {
+  try {
+    if (!req.user || !req.user._id) {
+      return res.status(401).json({ error: "Unauthorized: user not found" });
+    }
+    const userId = req.user._id;
+
+    const projects = await ProProject.find({ "applicants.user": userId })
+      .populate('postedBy', 'fullName email')
+      .populate('applicants.user', 'fullName email');
+
+    res.json({ projects });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch applied projects" });
+  }
+};
+
+const assignProProject = async (req, res) => {
+  try {
+    const { projectId } = req.params;
+    const { userId } = req.body;
+
+    // Find and update the project
+    const project = await ProProject.findById(projectId);
+    if (!project) {
+      return res.status(404).json({ error: "Project not found" });
+    }
+
+    // Only allow assignment if not already assigned
+    if (project.status !== "yet to be assigned") {
+      return res.status(400).json({ error: "Project already assigned" });
+    }
+
+    project.assignedTo = userId;
+    project.status = "assigned but not completed";
+    await project.save();
+
+    res.json({ message: "Project assigned successfully", project });
+  } catch (err) {
+    console.error("Assign error:", err);
+    res.status(500).json({ error: "Failed to assign project" });
+  }
+};
+
+module.exports = { createProProject, updateProProject, deleteProProject, getMyProProjects, getProProject, getAssignedProProjects, getProEarnings, getAllAvailableProProjects, applyToProProject, getAppliedProjects, assignProProject };

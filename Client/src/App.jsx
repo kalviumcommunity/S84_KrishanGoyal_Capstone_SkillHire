@@ -10,6 +10,8 @@ import Client from "./Pages/Client";
 import ProfilePage from "./Pages/ProfilePage";
 import ProjectDetails from "./Components/ProjectDetails";
 import AllProProjects from "./Pages/AllProProjects";
+import Applied from "./Pages/Applied";
+import YourProjects from "./Pages/YourProjects";
 
 function App() {
   return (
@@ -32,6 +34,8 @@ function App() {
           element={<ProjectDetails type="pro" />}
         />
         <Route path="/pro-projects" element={<AllProProjects/>}/>
+        <Route path="/applied-projects" element={<Applied/>}/>
+        <Route path="/your-projects" element={<YourProjects />} />
       </Routes>
     </>
   );

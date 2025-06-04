@@ -116,3 +116,342 @@
   margin: 2rem auto;
   max-width: 500px;
 }
+
+/* Modal styles */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: #fff;
+  padding: 2rem;
+  border-radius: 8px;
+  max-width: 450px;
+  width: 95%;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.18);
+}
+
+.close-modal-btn {
+  margin-top: 1rem;
+  background: #e74c3c;
+  color: #fff;
+  border: none;
+  padding: 0.5rem 1.2rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.close-modal-btn:hover {
+  background: #c0392b;
+}
+
+.view-applicants-btn {
+  background: #3498db;
+  color: #fff;
+  border: none;
+  padding: 0.3rem 0.8rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.95rem;
+}
+
+.view-applicants-btn:hover {
+  background: #217dbb;
+}
+
+.applicants-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  margin-bottom: 1rem;
+}
+
+.applicant-card {
+  background: #f7fafd;
+  border-radius: 8px;
+  padding: 1rem 1.2rem;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+}
+
+.applicant-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.applicant-name {
+  font-weight: 600;
+  font-size: 1.08rem;
+  color: #2d3a4a;
+}
+
+.contact-btn {
+  background: #27ae60;
+  color: #fff;
+  border: none;
+  padding: 0.3rem 0.9rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.97rem;
+  transition: background 0.2s;
+}
+
+.contact-btn:hover {
+  background: #219150;
+}
+
+.applicant-pitch span {
+  font-weight: 500;
+  color: #555;
+}
+
+.applicant-pitch blockquote {
+  margin: 0.3rem 0 0 0;
+  padding: 0.6rem 1rem;
+  background: #eaf6fb;
+  border-left: 4px solid #3498db;
+  border-radius: 4px;
+  font-style: italic;
+  color: #333;
+}
+
+.assign-section {
+  margin-top: 1.2rem;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.assign-dropdown {
+  padding: 0.3rem 0.7rem;
+  border-radius: 4px;
+  border: 1px solid #bbb;
+  font-size: 1rem;
+}
+
+.assign-btn, .show-interest-btn {
+  background: #27ae60;
+  color: #fff;
+  border: none;
+  padding: 0.3rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background 0.2s;
+}
+
+.assign-btn:disabled {
+  background: #b2dfb2;
+  cursor: not-allowed;
+}
+
+.assign-btn:hover:not(:disabled), .show-interest-btn:hover {
+  background: #219150;
+}
+
+.show-interest-btn {
+  margin-top: 0.5rem;
+}
+
+.your-pitch-blockquote {
+  margin: 0.5rem 0 0 0;
+  padding: 0.7rem 1.1rem;
+  background: #f0f8ff;
+  border-left: 4px solid #27ae60;
+  border-radius: 4px;
+  font-style: italic;
+  color: #222;
+}
+
+.delete-btn {
+  background: #e53935;
+  color: #fff;
+  border: none;
+  padding: 0.6rem 1.5rem;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-top: 1rem;
+  transition: background 0.2s;
+}
+
+.delete-btn:hover,
+.delete-btn:focus {
+  background: #b71c1c;
+}
+
+.delete-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.floating-delete-container {
+  position: fixed;
+  bottom: 36px;
+  right: 44px;
+  z-index: 1200;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.floating-delete-btn {
+  background: #e53935;
+  color: #fff;
+  border: none;
+  padding: 0.7rem 2.2rem;
+  border-radius: 30px;
+  font-size: 1.08rem;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(229,57,53,0.18);
+  transition: background 0.2s, box-shadow 0.2s;
+}
+
+.floating-delete-btn:hover,
+.floating-delete-btn:focus {
+  background: #b71c1c;
+  box-shadow: 0 4px 16px rgba(229,57,53,0.25);
+}
+
+.floating-delete-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+@media (max-width: 600px) {
+  .floating-delete-container {
+    right: 10px;
+    bottom: 10px;
+  }
+  .floating-delete-btn {
+    padding: 0.5rem 1.2rem;
+    font-size: 1rem;
+  }
+}
+
+.delete-confirm-modal {
+  max-width: 350px;
+  text-align: center;
+  padding: 2rem 1.5rem 1.5rem 1.5rem;
+}
+
+.delete-confirm-modal h3 {
+  color: #e53935;
+  margin-bottom: 0.7rem;
+}
+
+.delete-confirm-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 1.5rem;
+}
+
+.delete-confirm-actions .btn-outline {
+  background: #fff;
+  color: #333;
+  border: 1.5px solid #bbb;
+  border-radius: 4px;
+  padding: 0.5rem 1.2rem;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: border 0.2s, color 0.2s;
+}
+
+.delete-confirm-actions .btn-outline:hover {
+  border: 1.5px solid #e53935;
+  color: #e53935;
+}
+
+.delete-confirm-actions .delete-btn {
+  padding: 0.5rem 1.2rem;
+  font-size: 1rem;
+  border-radius: 4px;
+  margin-left: 12px;
+}
+
+/* Success Alert */
+.custom-success-alert {
+  position: fixed;
+  top: 32px;
+  right: 32px;
+  background: #43a047;
+  color: #fff;
+  padding: 1rem 2rem;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  box-shadow: 0 2px 12px rgba(67,160,71,0.18);
+  z-index: 2000;
+  animation: fadeInOut 2s;
+}
+@keyframes fadeInOut {
+  0% { opacity: 0; transform: translateY(-20px);}
+  10% { opacity: 1; transform: translateY(0);}
+  90% { opacity: 1; transform: translateY(0);}
+  100% { opacity: 0; transform: translateY(-20px);}
+}
+
+.custom-success-alert {
+  position: fixed;
+  top: 32px;
+  right: 32px;
+  background: #43a047;
+  color: #fff;
+  padding: 1rem 2rem;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  box-shadow: 0 2px 12px rgba(67,160,71,0.18);
+  z-index: 2000;
+  animation: fadeInOut 2s;
+}
+@keyframes fadeInOut {
+  0% { opacity: 0; transform: translateY(-20px);}
+  10% { opacity: 1; transform: translateY(0);}
+  90% { opacity: 1; transform: translateY(0);}
+  100% { opacity: 0; transform: translateY(-20px);}
+}
+
+/* Assign dropdown and button styling */
+.assign-section {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+.assign-dropdown {
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  border: 1px solid #bbb;
+  font-size: 1rem;
+}
+.assign-btn {
+  background: #1976d2;
+  color: #fff;
+  border: none;
+  padding: 0.5rem 1.3rem;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.assign-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.assign-btn-green {
+  background: #27ae60 !important;
+  color: #fff !important;
+}
+.assign-btn-green:disabled {
+  background: #ccc !important;
+  color: #fff !important;
+  cursor: not-allowed;
+}
