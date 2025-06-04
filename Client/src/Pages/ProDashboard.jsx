@@ -147,7 +147,7 @@ export default function ProDashboard() {
               {activeTab === "projects" && (
                 <div className="projects-grid">
                   {projects.map((project) => (
-                    <div key={project.id} className="project-card">
+                    <div key={project._id} className="project-card">
                       <div className="project-header">
                         <h3>{project.title}</h3>
                         <span className={`status-badge ${project.status}`}>

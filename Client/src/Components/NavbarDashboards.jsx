@@ -30,7 +30,6 @@ const NavbarDashboards = () => {
     }
   };
 
-  // Close profile dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -71,9 +70,14 @@ const NavbarDashboards = () => {
           )}
 
           {user?.role === 'pro-worker' && (
-            <Link to="/pro-projects" className="dashboard-navbar-link">
-              All Projects (Pro)
-            </Link>
+            <>
+              <Link to="/pro-projects" className="dashboard-navbar-link">
+                All Projects (Pro)
+              </Link>
+              <Link to="/applied-projects" className="dashboard-navbar-link">
+                Applied
+              </Link>
+            </>
           )}
 
           {user?.role === 'client' && (

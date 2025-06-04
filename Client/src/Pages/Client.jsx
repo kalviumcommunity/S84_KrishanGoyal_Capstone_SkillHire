@@ -9,7 +9,6 @@ const Client = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [projects, setProjects] = useState([]);
-  const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [projectType, setProjectType] = useState("all");
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -25,6 +24,7 @@ const Client = () => {
   });
   const [creatingProject, setCreatingProject] = useState(false);
   const [error, setError] = useState(null);
+  const [showSuccessAlert, setShowSuccessAlert] = useState(false); // <-- NEW
 
   const baseUrl = import.meta.env.VITE_API_BASE_URL;
 
@@ -62,7 +62,6 @@ const Client = () => {
         });
 
         setProjects(response.data.projects || []);
-        setMessages(response.data.messages || []);
       } catch (error) {
         console.error("Error fetching projects:", error);
         setError(
@@ -121,6 +120,8 @@ const Client = () => {
         dueDate: "",
         budget: "",
       });
+      setShowSuccessAlert(true); // Show success alert
+      setTimeout(() => setShowSuccessAlert(false), 2000); // Hide after 2s
     } catch (error) {
       console.error("Error creating project:", error);
       setError(error.response?.data?.message || "Failed to create project");
@@ -382,6 +383,12 @@ const Client = () => {
   return (
     <>
       <NavbarDashboards />
+      {/* Success Alert */}
+      {showSuccessAlert && (
+        <div className="custom-success-alert">
+          Project created successfully!
+        </div>
+      )}
       <div className="client-dashboard">
         <div className="dashboard-content-wrapper">
           <div className="dashboard-header">

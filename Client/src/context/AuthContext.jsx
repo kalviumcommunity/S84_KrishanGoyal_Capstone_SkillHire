@@ -52,7 +52,7 @@ export const AuthProvider = ({ children }) => {
         };
 
         checkAuth();
-    }, []);
+    }, [baseUrl]);
 
     const login = async (userData, token) => {
         if (!token) {
