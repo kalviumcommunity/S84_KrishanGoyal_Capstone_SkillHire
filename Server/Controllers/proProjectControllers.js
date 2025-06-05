@@ -188,9 +188,18 @@ const applyToProProject = async (req, res) => {
       userId: req.user?._id,
       userRole: req.user?.role,
       projectId: req.params.projectId,
-      hasPitch: !!req.body.pitch
+      hasPitch: !!req.body.pitch,
+      headers: req.headers,
+      body: req.body
     });
 
+    // Validate user
+    if (!req.user) {
+      console.error('No user found in request');
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+
+    // Check if user is a professional
     if (req.user.role !== 'pro-worker') {
       console.log('User role check failed:', { role: req.user.role });
       return res.status(403).json({ error: 'Only professional workers can apply to projects' });
@@ -202,33 +211,74 @@ const applyToProProject = async (req, res) => {
       return res.status(400).json({ error: 'Pitch is required' });
     }
 
+    // Validate project ID
+    if (!req.params.projectId) {
+      console.error('No project ID provided');
+      return res.status(400).json({ error: 'Project ID is required' });
+    }
+
+    console.log('Attempting to find project:', req.params.projectId);
     const project = await ProProject.findById(req.params.projectId);
+
     if (!project) {
       console.log('Project not found:', req.params.projectId);
       return res.status(404).json({ error: 'Project not found' });
     }
 
+    console.log('Found project:', {
+      id: project._id,
+      title: project.title,
+      status: project.status,
+      hasApplicants: !!project.applicants
+    });
+
+    // Check if project is already assigned
     if (project.assignedTo) {
-      console.log('Project already assigned:', { projectId: project._id, assignedTo: project.assignedTo });
+      console.log('Project already assigned:', {
+        projectId: project._id,
+        assignedTo: project.assignedTo
+      });
       return res.status(400).json({ error: 'Project is already assigned' });
     }
 
+    // Initialize applicants array if it doesn't exist
     if (!project.applicants) {
+      console.log('Initializing applicants array');
       project.applicants = [];
     }
 
-    if (project.applicants.some(a => a.user && a.user.toString() === req.user._id.toString())) {
-      console.log('Duplicate application attempt:', { userId: req.user._id, projectId: project._id });
+    // Prevent duplicate applications
+    const hasApplied = project.applicants.some(a =>
+      a.user && a.user.toString() === req.user._id.toString()
+    );
+
+    if (hasApplied) {
+      console.log('Duplicate application attempt:', {
+        userId: req.user._id,
+        projectId: project._id
+      });
       return res.status(400).json({ error: 'You have already applied to this project' });
     }
 
-    project.applicants.push({ user: req.user._id, pitch });
-    await project.save();
-
-    console.log('Application submitted successfully:', {
+    console.log('Adding new application:', {
+      userId: req.user._id,
       projectId: project._id,
-      userId: req.user._id
+      pitchLength: pitch.length
     });
+
+    project.applicants.push({ user: req.user._id, pitch });
+
+    try {
+      await project.save();
+      console.log('Application saved successfully');
+    } catch (saveError) {
+      console.error('Error saving project:', {
+        error: saveError.message,
+        stack: saveError.stack,
+        validationErrors: saveError.errors
+      });
+      throw saveError;
+    }
 
     res.status(200).json({
       message: 'Application submitted successfully',
@@ -241,12 +291,22 @@ const applyToProProject = async (req, res) => {
       projectId: req.params.projectId,
       userId: req.user?._id,
       body: req.body,
-      mongooseError: err.name === 'ValidationError' ? err.errors : undefined
+      mongooseError: err.name === 'ValidationError' ? err.errors : undefined,
+      name: err.name,
+      code: err.code
     });
-    res.status(500).json({
+
+    // Send more detailed error response in development
+    const errorResponse = {
       error: 'Failed to submit application. Please try again.',
-      details: process.env.NODE_ENV === 'development' ? err.message : undefined
-    });
+      details: process.env.NODE_ENV === 'development' ? {
+        message: err.message,
+        name: err.name,
+        code: err.code
+      } : undefined
+    };
+
+    res.status(500).json(errorResponse);
   }
 };
 
