@@ -115,13 +115,7 @@ const ProjectDetails = ({ type }) => {
     e.preventDefault();
     setSubmittingPitch(true);
     try {
-      console.log('Submitting pitch from ProjectDetails:', {
-        projectId: project._id,
-        pitch,
-        token: localStorage.getItem("authToken")
-      });
-
-      const response = await axios.post(
+      await axios.post(
         `${baseUrl}/api/pro-projects/${project._id}/apply`,
         { pitch },
         {
@@ -132,7 +126,6 @@ const ProjectDetails = ({ type }) => {
         }
       );
 
-      console.log('Pitch submission response:', response.data);
       setSuccessMessage("Your pitch has been submitted successfully!");
       setPitch("");
       setTimeout(() => setSuccessMessage(""), 2000);
@@ -157,7 +150,6 @@ const ProjectDetails = ({ type }) => {
     }
   };
 
-  // --- DELETE PROJECT HANDLER ---
   const handleDeleteProject = async () => {
     setDeleting(true);
     try {
