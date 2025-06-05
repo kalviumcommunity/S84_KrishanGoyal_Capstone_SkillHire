@@ -184,7 +184,6 @@ const getAllAvailableProProjects = async (req, res) => {
 
 const applyToProProject = async (req, res) => {
   try {
-    // Check if user is a professional
     if (req.user.role !== 'pro-worker') {
       return res.status(403).json({ error: 'Only professional workers can apply to projects' });
     }
@@ -199,17 +198,14 @@ const applyToProProject = async (req, res) => {
       return res.status(404).json({ error: 'Project not found' });
     }
 
-    // Check if project is already assigned
     if (project.assignedTo) {
       return res.status(400).json({ error: 'Project is already assigned' });
     }
 
-    // Initialize applicants array if it doesn't exist
     if (!project.applicants) {
       project.applicants = [];
     }
 
-    // Prevent duplicate applications
     if (project.applicants.some(a => a.user && a.user.toString() === req.user._id.toString())) {
       return res.status(400).json({ error: 'You have already applied to this project' });
     }
@@ -222,7 +218,17 @@ const applyToProProject = async (req, res) => {
       project
     });
   } catch (err) {
-    res.status(500).json({ error: 'Failed to submit application. Please try again.' });
+    console.error('Error in applyToProProject:', {
+      error: err.message,
+      stack: err.stack,
+      projectId: req.params.projectId,
+      userId: req.user?._id,
+      body: req.body
+    });
+    res.status(500).json({
+      error: 'Failed to submit application. Please try again.',
+      details: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
   }
 };
 
@@ -248,13 +254,11 @@ const assignProProject = async (req, res) => {
     const { projectId } = req.params;
     const { userId } = req.body;
 
-    // Find and update the project
     const project = await ProProject.findById(projectId);
     if (!project) {
       return res.status(404).json({ error: "Project not found" });
     }
 
-    // Only allow assignment if not already assigned
     if (project.status !== "yet to be assigned") {
       return res.status(400).json({ error: "Project already assigned" });
     }

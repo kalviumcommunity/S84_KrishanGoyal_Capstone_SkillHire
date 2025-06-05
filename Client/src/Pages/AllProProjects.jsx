@@ -29,6 +29,7 @@ const AllProProjects = () => {
         );
         setProjects(res.data.projects || []);
       } catch (err) {
+        console.error(err)
         setProjects([]);
       } finally {
         setLoading(false);
@@ -47,6 +48,11 @@ const AllProProjects = () => {
     e.preventDefault();
     setSubmittingPitch(true);
     try {
+      console.log('Submitting pitch:', {
+        projectId: selectedProjectId,
+        pitch,
+        token: localStorage.getItem("authToken")
+      });
       await axios.post(
         `${import.meta.env.VITE_API_BASE_URL}/api/pro-projects/${selectedProjectId}/apply`,
         { pitch },
