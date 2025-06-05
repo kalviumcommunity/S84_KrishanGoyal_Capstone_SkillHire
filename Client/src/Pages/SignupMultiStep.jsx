@@ -31,6 +31,7 @@ export default function SignupMultiStep() {
   const [goSkillInput, setGoSkillInput] = useState("");
   const [proSkillInput, setProSkillInput] = useState("");
   const [error, setError] = useState(null);
+  const [successMessage, setSuccessMessage] = useState("");
 
   useEffect(() => {
     document.body.style.overflow = "hidden";
@@ -155,7 +156,9 @@ export default function SignupMultiStep() {
 
       if (res.data.token && res.data.user) {
         await login(res.data.user, res.data.token);
-        setStep(2);
+        setSuccessMessage("Account created successfully!");
+        setTimeout(() => setSuccessMessage(""), 1500);
+        setTimeout(() => setStep(2), 1500);
       } else {
         throw new Error("Invalid response from server");
       }
@@ -210,20 +213,24 @@ export default function SignupMultiStep() {
 
       if (res.data.token && res.data.user) {
         await login(res.data.user, res.data.token);
+        setSuccessMessage("Profile completed successfully!");
+        setTimeout(() => setSuccessMessage(""), 2000);
 
-        switch (form.role) {
-          case "client":
-            navigate("/client", { replace: true });
-            break;
-          case "go-worker":
-            navigate("/go", { replace: true });
-            break;
-          case "pro-worker":
-            navigate("/pro", { replace: true });
-            break;
-          default:
-            alert("Error in checking the role of user");
-        }
+        setTimeout(() => {
+          switch (form.role) {
+            case "client":
+              navigate("/client", { replace: true });
+              break;
+            case "go-worker":
+              navigate("/go", { replace: true });
+              break;
+            case "pro-worker":
+              navigate("/pro", { replace: true });
+              break;
+            default:
+              alert("Error in checking the role of user");
+          }
+        }, 2000);
       } else {
         throw new Error("Invalid response from server");
       }
@@ -242,14 +249,18 @@ export default function SignupMultiStep() {
       {" "}
       <div className="signup-bg-art">
         {" "}
+        {successMessage && (
+          <div className="custom-success-alert">{successMessage}</div>
+        )}
+        {error && (
+          <div className="custom-error-alert">{error}</div>
+        )}
         <div className="circle circle1"></div>{" "}
         <div className="circle circle2"></div>{" "}
         <div className="circle circle3"></div>
         <h2 className="signup-heading-outer">Sign Up</h2>
         <div className="signup-container">
           <div className="signup-form-section">
-            {error && <div className="error-message">{error}</div>}
-
             {step === 1 && (
               <form onSubmit={handleStep1Submit} className="signup-form">
                 <div className="form-group">

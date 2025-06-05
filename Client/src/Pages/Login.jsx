@@ -53,7 +53,7 @@ export default function Login() {
         await login(res.data.user, res.data.token);
 
         setSuccessMessage("Login successful!");
-        setTimeout(() => setSuccessMessage(""), 2000);
+        setTimeout(() => setSuccessMessage(""), 1500);
 
         setTimeout(() => {
           switch (res.data.user.role) {
@@ -69,7 +69,7 @@ export default function Login() {
             default:
               navigate("/", { replace: true });
           }
-        }, 2000);
+        }, 1500);
       } else {
         throw new Error("Invalid response from server");
       }
