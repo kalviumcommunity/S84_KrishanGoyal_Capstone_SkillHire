@@ -184,21 +184,32 @@ const getAllAvailableProProjects = async (req, res) => {
 
 const applyToProProject = async (req, res) => {
   try {
+    console.log('Received application request:', {
+      userId: req.user?._id,
+      userRole: req.user?.role,
+      projectId: req.params.projectId,
+      hasPitch: !!req.body.pitch
+    });
+
     if (req.user.role !== 'pro-worker') {
+      console.log('User role check failed:', { role: req.user.role });
       return res.status(403).json({ error: 'Only professional workers can apply to projects' });
     }
 
     const { pitch } = req.body;
     if (!pitch) {
+      console.log('Missing pitch in request body');
       return res.status(400).json({ error: 'Pitch is required' });
     }
 
     const project = await ProProject.findById(req.params.projectId);
     if (!project) {
+      console.log('Project not found:', req.params.projectId);
       return res.status(404).json({ error: 'Project not found' });
     }
 
     if (project.assignedTo) {
+      console.log('Project already assigned:', { projectId: project._id, assignedTo: project.assignedTo });
       return res.status(400).json({ error: 'Project is already assigned' });
     }
 
@@ -207,11 +218,17 @@ const applyToProProject = async (req, res) => {
     }
 
     if (project.applicants.some(a => a.user && a.user.toString() === req.user._id.toString())) {
+      console.log('Duplicate application attempt:', { userId: req.user._id, projectId: project._id });
       return res.status(400).json({ error: 'You have already applied to this project' });
     }
 
     project.applicants.push({ user: req.user._id, pitch });
     await project.save();
+
+    console.log('Application submitted successfully:', {
+      projectId: project._id,
+      userId: req.user._id
+    });
 
     res.status(200).json({
       message: 'Application submitted successfully',
@@ -223,7 +240,8 @@ const applyToProProject = async (req, res) => {
       stack: err.stack,
       projectId: req.params.projectId,
       userId: req.user?._id,
-      body: req.body
+      body: req.body,
+      mongooseError: err.name === 'ValidationError' ? err.errors : undefined
     });
     res.status(500).json({
       error: 'Failed to submit application. Please try again.',

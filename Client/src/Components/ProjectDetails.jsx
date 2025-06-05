@@ -115,7 +115,13 @@ const ProjectDetails = ({ type }) => {
     e.preventDefault();
     setSubmittingPitch(true);
     try {
-      await axios.post(
+      console.log('Submitting pitch from ProjectDetails:', {
+        projectId: project._id,
+        pitch,
+        token: localStorage.getItem("authToken")
+      });
+
+      const response = await axios.post(
         `${baseUrl}/api/pro-projects/${project._id}/apply`,
         { pitch },
         {
@@ -125,16 +131,27 @@ const ProjectDetails = ({ type }) => {
           withCredentials: true,
         }
       );
+
+      console.log('Pitch submission response:', response.data);
       setSuccessMessage("Your pitch has been submitted successfully!");
       setPitch("");
       setTimeout(() => setSuccessMessage(""), 2000);
       setTimeout(() => setShowPitchModal(false), 1500);
     } catch (err) {
-      alert(
-        err.response?.data?.error ||
-          err.response?.data?.message ||
-          "Failed to submit pitch"
-      );
+      console.error('Error submitting pitch from ProjectDetails:', {
+        message: err.message,
+        response: err.response?.data,
+        status: err.response?.status,
+        headers: err.response?.headers,
+        projectId: project._id
+      });
+
+      const errorMessage = err.response?.data?.error || 
+                          err.response?.data?.details || 
+                          err.response?.data?.message || 
+                          "Failed to submit pitch";
+      
+      alert(errorMessage);
     } finally {
       setSubmittingPitch(false);
     }

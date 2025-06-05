@@ -29,7 +29,6 @@ const AllProProjects = () => {
         );
         setProjects(res.data.projects || []);
       } catch (err) {
-        console.error(err)
         setProjects([]);
       } finally {
         setLoading(false);
@@ -53,7 +52,7 @@ const AllProProjects = () => {
         pitch,
         token: localStorage.getItem("authToken")
       });
-      await axios.post(
+      const response = await axios.post(
         `${import.meta.env.VITE_API_BASE_URL}/api/pro-projects/${selectedProjectId}/apply`,
         { pitch },
         {
@@ -63,14 +62,22 @@ const AllProProjects = () => {
           withCredentials: true,
         }
       );
+      console.log('Response:', response.data);
       setSuccessMessage("Your pitch has been submitted successfully!");
       setPitch("");
       setTimeout(() => setSuccessMessage(""), 2000);
       setTimeout(() => setShowPitchModal(false), 1500);
     } catch (err) {
+      console.error('Error submitting pitch:', {
+        message: err.message,
+        response: err.response?.data,
+        status: err.response?.status,
+        headers: err.response?.headers
+      });
       alert(
         err.response?.data?.error ||
-          "Failed to submit application. Please try again."
+        err.response?.data?.details ||
+        "Failed to submit application. Please try again."
       );
     } finally {
       setSubmittingPitch(false);
