@@ -1,0 +1,258 @@
+/* Initial loading animation for the entire page */
+@keyframes pageLoad {
+    0% {
+        opacity: 0;
+        transform: scale(0.98) translateY(20px);
+    }
+
+    100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* Floating animation for elements */
+@keyframes float {
+    0% {
+        transform: translateY(0px);
+    }
+
+    50% {
+        transform: translateY(-8px);
+    }
+
+    100% {
+        transform: translateY(0px);
+    }
+}
+
+/* Gradient animation for background */
+@keyframes gradientShift {
+    0% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+/* Text reveal animation */
+@keyframes textReveal {
+    0% {
+        clip-path: polygon(0 0, 0 0, 0 100%, 0 100%);
+        opacity: 0;
+    }
+
+    100% {
+        clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+        opacity: 1;
+    }
+}
+
+/* Curtain reveal animation */
+@keyframes curtainReveal {
+    0% {
+        clip-path: polygon(0 0, 100% 0, 100% 0, 0 0);
+        opacity: 0;
+    }
+
+    100% {
+        clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+        opacity: 1;
+    }
+}
+
+/* Falling elements animation */
+@keyframes fallingElement {
+    0% {
+        transform: translateY(-100vh) rotate(0deg);
+        opacity: 0;
+    }
+
+    60% {
+        transform: translateY(20px) rotate(5deg);
+        opacity: 1;
+    }
+
+    80% {
+        transform: translateY(-10px) rotate(-3deg);
+    }
+
+    100% {
+        transform: translateY(0) rotate(0deg);
+    }
+}
+
+/* Side curtain animation */
+@keyframes sideCurtain {
+    0% {
+        transform: translateX(-100%);
+        opacity: 0;
+    }
+
+    100% {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Glowing pulse animation */
+@keyframes glowPulse {
+    0% {
+        box-shadow: 0 0 5px rgba(100, 108, 255, 0.2),
+            0 0 10px rgba(100, 108, 255, 0.2),
+            0 0 15px rgba(100, 108, 255, 0.2);
+    }
+
+    50% {
+        box-shadow: 0 0 20px rgba(100, 108, 255, 0.4),
+            0 0 30px rgba(100, 108, 255, 0.4),
+            0 0 40px rgba(100, 108, 255, 0.4);
+    }
+
+    100% {
+        box-shadow: 0 0 5px rgba(100, 108, 255, 0.2),
+            0 0 10px rgba(100, 108, 255, 0.2),
+            0 0 15px rgba(100, 108, 255, 0.2);
+    }
+}
+
+/* Initial page load animation */
+.landing-page {
+    opacity: 0;
+    transition: opacity 0.5s ease-out;
+    position: relative;
+    overflow: hidden;
+    min-height: 100vh;
+}
+
+.landing-page.loaded {
+    opacity: 1;
+}
+
+.landing-page.animating .landing-content {
+    opacity: 0;
+}
+
+/* Animated background with enhanced gradient */
+.landing-bg {
+    background: linear-gradient(-45deg, #646cff, #535bf2, #4CAF50, #2196F3);
+    background-size: 400% 400%;
+    animation: gradientShift 15s ease infinite, glowPulse 3s ease-in-out infinite;
+    min-height: 100vh;
+    position: relative;
+}
+
+.curtain-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 100%);
+    animation: curtainReveal 1.5s ease-out forwards;
+    pointer-events: none;
+    z-index: 1000;
+}
+
+/* Enhanced section animations */
+.landing-content {
+    position: relative;
+    will-change: transform, opacity;
+    backface-visibility: hidden;
+    transform: translateZ(0);
+    -webkit-font-smoothing: antialiased;
+}
+
+/* Navbar special animation */
+.landing-nav {
+    animation: sideCurtain 1s ease-out forwards;
+    animation-delay: 0.2s;
+}
+
+/* Hero section special animation */
+.landing-hero {
+    animation: fallingElement 1.2s ease-out forwards;
+    animation-delay: 0.4s;
+}
+
+/* About section animation */
+.landing-about {
+    animation: curtainReveal 1s ease-out forwards;
+    animation-delay: 0.6s;
+}
+
+/* Services section animation */
+.landing-services {
+    animation: fallingElement 1.2s ease-out forwards;
+    animation-delay: 0.8s;
+}
+
+/* Pricing plans animation */
+.landing-pricing {
+    animation: curtainReveal 1s ease-out forwards;
+    animation-delay: 1s;
+}
+
+/* How it works animation */
+.landing-how-it-works {
+    animation: fallingElement 1.2s ease-out forwards;
+    animation-delay: 1.2s;
+}
+
+/* Testimonials animation */
+.landing-testimonials {
+    animation: curtainReveal 1s ease-out forwards;
+    animation-delay: 1.4s;
+}
+
+/* Contact form animation */
+.landing-contact {
+    animation: fallingElement 1.2s ease-out forwards;
+    animation-delay: 1.6s;
+}
+
+/* Footer animation */
+.landing-footer {
+    animation: sideCurtain 1s ease-out forwards;
+    animation-delay: 1.8s;
+}
+
+/* Enhanced text reveal for hero section */
+.landing-text {
+    animation: fallingElement 1.2s ease-out forwards;
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+}
+
+/* Smooth scroll behavior */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Add 3D perspective to the page */
+.landing-page {
+    perspective: 1000px;
+}
+
+/* Add hover effects to interactive elements */
+.landing-content:hover {
+    transform: translateZ(20px);
+    transition: transform 0.3s ease-out;
+}
+
+/* Optimize performance */
+@media (prefers-reduced-motion: reduce) {
+
+    .landing-content,
+    .landing-bg,
+    .landing-text,
+    .curtain-overlay {
+        animation: none;
+        transition: none;
+    }
+}

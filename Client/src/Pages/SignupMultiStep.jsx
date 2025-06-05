@@ -4,6 +4,7 @@ import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 import axios from "axios";
 import { useAuth } from "../context/AuthContext";
 import "../Styles/SignupMultiStep.css";
+import "../Styles/PageTransitions.css";
 
 const baseUrl = import.meta.env.VITE_API_BASE_URL;
 const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
@@ -157,8 +158,8 @@ export default function SignupMultiStep() {
       if (res.data.token && res.data.user) {
         await login(res.data.user, res.data.token);
         setSuccessMessage("Account created successfully!");
-        setTimeout(() => setSuccessMessage(""), 1500);
-        setTimeout(() => setStep(2), 1500);
+        setTimeout(() => setSuccessMessage(""), 400);
+        setTimeout(() => setStep(2), 1000);
       } else {
         throw new Error("Invalid response from server");
       }
@@ -214,7 +215,9 @@ export default function SignupMultiStep() {
       if (res.data.token && res.data.user) {
         await login(res.data.user, res.data.token);
         setSuccessMessage("Profile completed successfully!");
-        setTimeout(() => setSuccessMessage(""), 2000);
+        setTimeout(() => setSuccessMessage(""), 400);
+        const container = document.querySelector('.signup-container');
+        container.classList.add('success-transition');
 
         setTimeout(() => {
           switch (form.role) {
@@ -230,7 +233,7 @@ export default function SignupMultiStep() {
             default:
               alert("Error in checking the role of user");
           }
-        }, 2000);
+        }, 600);
       } else {
         throw new Error("Invalid response from server");
       }
@@ -242,6 +245,14 @@ export default function SignupMultiStep() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleNavigateToLogin = () => {
+    const container = document.querySelector('.signup-container');
+    container.classList.add('slide-out');
+    setTimeout(() => {
+      navigate('/login');
+    }, 600);
   };
 
   return (
@@ -356,7 +367,7 @@ export default function SignupMultiStep() {
                   <button
                     type="button"
                     className="login-link"
-                    onClick={() => navigate("/login")}
+                    onClick={handleNavigateToLogin}
                   >
                     Login
                   </button>

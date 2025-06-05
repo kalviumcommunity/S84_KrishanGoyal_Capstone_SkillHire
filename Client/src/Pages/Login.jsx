@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import axios from "axios";
 import "../Styles/Login.css";
+import "../Styles/PageTransitions.css";
 const baseUrl = import.meta.env.VITE_API_BASE_URL;
 
 export default function Login() {
@@ -53,7 +54,9 @@ export default function Login() {
         await login(res.data.user, res.data.token);
 
         setSuccessMessage("Login successful!");
-        setTimeout(() => setSuccessMessage(""), 1500);
+        setTimeout(() => setSuccessMessage(""), 400);
+        const container = document.querySelector('.login-container');
+        container.classList.add('success-transition');
 
         setTimeout(() => {
           switch (res.data.user.role) {
@@ -69,7 +72,7 @@ export default function Login() {
             default:
               navigate("/", { replace: true });
           }
-        }, 1500);
+        }, 800);
       } else {
         throw new Error("Invalid response from server");
       }
@@ -80,6 +83,14 @@ export default function Login() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleNavigateToSignup = () => {
+    const container = document.querySelector('.login-container');
+    container.classList.add('slide-out');
+    setTimeout(() => {
+      navigate('/signup');
+    }, 800);
   };
 
   return (
@@ -163,7 +174,7 @@ export default function Login() {
               <button
                 type="button"
                 className="login-link"
-                onClick={() => navigate("/signup")}
+                onClick={handleNavigateToSignup}
                 style={{
                   background: "none",
                   border: "none",
