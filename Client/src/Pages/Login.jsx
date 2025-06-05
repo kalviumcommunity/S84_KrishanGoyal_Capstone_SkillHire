@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import axios from "axios";
 import "../Styles/Login.css";
 const baseUrl = import.meta.env.VITE_API_BASE_URL;
 
 export default function Login() {
   const navigate = useNavigate();
   const { login } = useAuth();
+  const [error, setError] = useState(null);
+  const [successMessage, setSuccessMessage] = useState("");
 
   const [form, setForm] = useState({
     email: "",
@@ -34,45 +37,46 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setError(null);
 
     try {
-      const res = await fetch(`${baseUrl}/api/auth/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      const res = await axios.post(
+        `${baseUrl}/api/auth/login`,
+        {
+          email: form.email,
+          password: form.password,
         },
-        body: JSON.stringify(form),
-        credentials: "include",
-      });
+        { withCredentials: true }
+      );
 
-      const data = await res.json();
+      if (res.data.token && res.data.user) {
+        await login(res.data.user, res.data.token);
 
-      if (res.ok) {
-        if (data.token && data.user) {
-          await login(data.user, data.token);
-          
-          switch (data.user.role) {
+        setSuccessMessage("Login successful!");
+        setTimeout(() => setSuccessMessage(""), 2000);
+
+        setTimeout(() => {
+          switch (res.data.user.role) {
             case "client":
-              navigate("/client", {replace: true});
+              navigate("/client", { replace: true });
               break;
             case "go-worker":
-              navigate("/go", {replace: true});
+              navigate("/go", { replace: true });
               break;
             case "pro-worker":
-              navigate("/pro", {replace: true});
+              navigate("/pro", { replace: true });
               break;
             default:
-              alert("Error in checking for role");
+              navigate("/", { replace: true });
           }
-        } else {
-          alert("Invalid response from server");
-        }
+        }, 2000);
       } else {
-        alert(data.error || "Login failed.");
+        throw new Error("Invalid response from server");
       }
     } catch (err) {
-      console.error("Login error:", err);
-      alert("An error occurred during login.");
+      setError(
+        err.response?.data?.message || "Login failed. Please try again."
+      );
     } finally {
       setLoading(false);
     }
@@ -80,6 +84,13 @@ export default function Login() {
 
   return (
     <div className="login-bg-art">
+      {successMessage && (
+        <div className="custom-success-alert">{successMessage}</div>
+      )}
+      {error && (
+        <div className="custom-error-alert">{error}</div>
+      )}
+
       <div className="circle circle1"></div>
       <div className="circle circle2"></div>
       <div className="circle circle3"></div>
