@@ -42,7 +42,6 @@ const ProfilePage = () => {
       </div>
 
       <div className="profile-content">
-        {/* Personal Information Section */}
         <div className="profile-section profile-info">
           <h2 className="section-title">Personal Information</h2>
           <div className="info-grid">
@@ -59,7 +58,6 @@ const ProfilePage = () => {
               </span>
             </div>
 
-            {/* Location - only for workers */}
             {(user?.role === "go-worker" || user?.role === "pro-worker") && (
               <div className="info-item">
                 <span className="info-label">Location</span>
@@ -81,7 +79,6 @@ const ProfilePage = () => {
           <button className="edit-profile-btn">Edit Profile</button>
         </div>
 
-        {/* Skills/Requirements Section - Different for each role */}
         <div className="profile-section profile-skills">
           {user?.role === "client" ? (
             <>
@@ -120,7 +117,6 @@ const ProfilePage = () => {
           )}
         </div>
 
-        {/* Statistics Section - Different for each role */}
         <div className="profile-section profile-stats">
           {user?.role === "client" ? (
             <>
@@ -173,7 +169,6 @@ const ProfilePage = () => {
           )}
         </div>
 
-        {/* Bio/Description Section - Different for each role */}
         <div className="profile-section profile-bio">
           {user?.role === "client" ? (
             <>

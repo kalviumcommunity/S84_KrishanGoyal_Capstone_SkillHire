@@ -111,9 +111,8 @@ export default function SignupMultiStep() {
       if (response.data?.success) {
         await login(response.data.user, response.data.token);
 
-        // Redirect based on user role or to profile completion
         if (!response.data.user.role) {
-          setStep(2); // Go to profile completion
+          setStep(2);
         } else {
           navigate(`/${response.data.user.role}`, { replace: true });
         }

@@ -19,7 +19,7 @@ const ProjectDetails = ({ type }) => {
   const [showPitchModal, setShowPitchModal] = useState(false);
   const [pitch, setPitch] = useState("");
   const [submittingPitch, setSubmittingPitch] = useState(false);
-  const [successMessage, setSuccessMessage] = useState(""); // For all actions
+  const [successMessage, setSuccessMessage] = useState("");
   const [deleting, setDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
@@ -75,7 +75,6 @@ const ProjectDetails = ({ type }) => {
     }
   };
 
-  // Assign project to applicant
   const handleAssign = async () => {
     if (!selectedApplicant) return;
     setAssigning(true);
@@ -104,13 +103,11 @@ const ProjectDetails = ({ type }) => {
     }
   };
 
-  // Show pitch modal
   const handleShowInterest = () => {
     setPitch("");
     setShowPitchModal(true);
   };
 
-  // Submit pitch
   const handlePitchSubmit = async (e) => {
     e.preventDefault();
     setSubmittingPitch(true);
@@ -225,7 +222,6 @@ const ProjectDetails = ({ type }) => {
 
   return (
     <div className="project-details-container">
-      {/* Success Alert */}
       {successMessage && (
         <div className="custom-success-alert">{successMessage}</div>
       )}
@@ -270,7 +266,6 @@ const ProjectDetails = ({ type }) => {
             </p>
           </div>
 
-          {/* Assign To Section (Client only) */}
           {user?.role === "client" &&
             project.status === "yet to be assigned" &&
             project.applicants?.length > 0 && (
@@ -301,7 +296,6 @@ const ProjectDetails = ({ type }) => {
               </div>
             )}
 
-          {/* Show Interest or Show Pitch (Pro user only) */}
           {user?.role === "pro-worker" &&
             project.status === "yet to be assigned" &&
             (myApplication ? (
@@ -339,7 +333,6 @@ const ProjectDetails = ({ type }) => {
         </div>
       </div>
 
-      {/* Floating Delete Button (Client only, not assigned) */}
       {user?.role === "client" && project.status === "yet to be assigned" && (
         <div className="floating-delete-container">
           <button
@@ -352,7 +345,6 @@ const ProjectDetails = ({ type }) => {
         </div>
       )}
 
-      {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
         <div className="modal-overlay">
           <div className="modal-content delete-confirm-modal">
@@ -384,7 +376,6 @@ const ProjectDetails = ({ type }) => {
         </div>
       )}
 
-      {/* Applicants Modal */}
       {showApplicantsModal && (
         <div className="modal-overlay">
           <div className="modal-content">
@@ -424,7 +415,6 @@ const ProjectDetails = ({ type }) => {
         </div>
       )}
 
-      {/* Show Interest Modal (Pro user only) */}
       {user?.role === "pro-worker" && showPitchModal && (
         <div className="modal-overlay">
           <div className="modal-content">

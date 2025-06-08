@@ -1,4 +1,3 @@
-// PricingPlans.jsx
 import React from 'react';
 import '../Styles/PricingPlans.css';
 

@@ -20,7 +20,6 @@ export default function ProDashboard() {
     const fetchData = async () => {
       try {
         setLoading(true);
-        // Fetch projects
         const projectsRes = await axios.get(
           `${
             import.meta.env.VITE_API_BASE_URL
@@ -34,7 +33,6 @@ export default function ProDashboard() {
         );
         setProjects(projectsRes.data.projects || []);
 
-        // Fetch earnings & transactions
         const earningsRes = await axios.get(
           `${
             import.meta.env.VITE_API_BASE_URL
@@ -60,7 +58,6 @@ export default function ProDashboard() {
     fetchData();
   }, []);
 
-  // Prevent back button
   useEffect(() => {
     window.history.pushState(null, "", window.location.href);
     const onPopState = () => {
@@ -78,23 +75,13 @@ export default function ProDashboard() {
       <NavbarDashboards />
 
       <div className="dashboard-container">
-        {/* Welcome Section */}
         <header className="dashboard-header">
           <div className="welcome-message">
             <h1>Welcome back, {user?.fullName || user?.email || "Pro"}!</h1>
             <p>Here's what's happening with your projects today</p>
           </div>
-          {/* <div className="profile-badge">
-            <img
-              src={user?.avatar || "/default-avatar.png"}
-              alt="Profile"
-              className="profile-image"
-            />
-            <span className="pro-badge">PRO</span>
-          </div> */}
         </header>
 
-        {/* Stats Cards */}
         <div className="stats-container">
           <div className="stat-card">
             <h3>Total Earnings</h3>
@@ -122,7 +109,6 @@ export default function ProDashboard() {
           </div>
         </div>
 
-        {/* Dashboard Tabs */}
         <div className="dashboard-tabs">
           <button
             className={`tab-btn ${activeTab === "projects" ? "active" : ""}`}
@@ -138,7 +124,6 @@ export default function ProDashboard() {
           </button>
         </div>
 
-        {/* Tab Content */}
         <div className="tab-content">
           {loading ? (
             <div className="loading-spinner">Loading...</div>
@@ -183,7 +168,6 @@ export default function ProDashboard() {
               {activeTab === "earnings" && (
                 <div className="earnings-container">
                   <div className="earnings-chart">
-                    {/* Placeholder for chart */}
                     <div className="chart-placeholder"></div>
                   </div>
                   <div className="transactions-list">

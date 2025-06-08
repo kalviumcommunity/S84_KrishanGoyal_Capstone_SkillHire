@@ -15,20 +15,17 @@ const LandingPage = () => {
   const [isAnimating, setIsAnimating] = useState(true);
 
   useEffect(() => {
-    // Handle browser back button
     window.history.pushState(null, '', window.location.href);
     const onPopState = () => {
       window.history.pushState(null, '', window.location.href);
     };
     window.addEventListener('popstate', onPopState);
 
-    // Trigger initial load animation
     const timer = setTimeout(() => {
       setIsLoaded(true);
-      // After all animations are complete
       setTimeout(() => {
         setIsAnimating(false);
-      }, 2000); // Adjust this timing based on your longest animation
+      }, 2000);
     }, 100);
 
     return () => {

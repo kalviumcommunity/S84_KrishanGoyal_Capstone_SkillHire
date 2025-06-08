@@ -120,8 +120,8 @@ const Client = () => {
         dueDate: "",
         budget: "",
       });
-      setShowSuccessAlert(true); // Show success alert
-      setTimeout(() => setShowSuccessAlert(false), 2000); // Hide after 2s
+      setShowSuccessAlert(true);
+      setTimeout(() => setShowSuccessAlert(false), 2000);
     } catch (error) {
       console.error("Error creating project:", error);
       setError(error.response?.data?.message || "Failed to create project");
@@ -383,7 +383,6 @@ const Client = () => {
   return (
     <>
       <NavbarDashboards />
-      {/* Success Alert */}
       {showSuccessAlert && (
         <div className="custom-success-alert">
           Project created successfully!

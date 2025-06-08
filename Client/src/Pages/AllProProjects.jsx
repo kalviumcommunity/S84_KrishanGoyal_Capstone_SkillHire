@@ -83,7 +83,6 @@ const AllProProjects = () => {
     navigate(`/pro-projects/${projectId}`);
   };
 
-  // Only show projects that are not yet assigned
   const availableProjects = projects.filter(
     (project) => project.status === "yet to be assigned"
   );
@@ -91,7 +90,6 @@ const AllProProjects = () => {
   return (
     <div>
       <NavbarDashboards />
-      {/* Success Alert */}
       {successMessage && (
         <div className="custom-success-alert">{successMessage}</div>
       )}
@@ -138,7 +136,6 @@ const AllProProjects = () => {
           </div>
         )}
 
-        {/* Pitch Modal */}
         {showPitchModal && (
           <div className="modal-overlay">
             <div className="modal-content">

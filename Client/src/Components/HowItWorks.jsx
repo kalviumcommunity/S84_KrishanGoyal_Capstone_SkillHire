@@ -1,4 +1,3 @@
-// HowItWorks.jsx
 import React from 'react';
 import '../Styles/HowItWorks.css';
 

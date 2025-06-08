@@ -1,4 +1,3 @@
-// Services.jsx
 import React from 'react';
 import '../Styles/Services.css';
 
