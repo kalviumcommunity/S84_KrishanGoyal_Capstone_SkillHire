@@ -1,48 +1,61 @@
 .how-section {
-  padding: 4rem 2rem;
-  background-color: #fff;
+  padding: 6rem 2rem;
   text-align: center;
+  background-color: #ffffff;
 }
 
 .how-section h2 {
   font-size: 2.5rem;
-  margin-bottom: 2.5rem;
-  color: #222;
+  font-weight: 800;
+  margin-bottom: 3rem;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .how-grid {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 2rem;
-  justify-content: center;
-  flex-wrap: wrap;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .how-card {
-  background-color: #f9f9f9;
+  background: var(--glass-bg);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
   padding: 2rem;
-  border-radius: 16px;
-  max-width: 320px;
-  text-align: left;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
-  flex: 1 1 280px;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition: transform 0.2s ease;
+  will-change: transform;
 }
 
 .how-card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.1);
+  transform: translateY(-5px);
 }
 
 .how-image {
   width: 100%;
-  height: 180px;
+  height: 250px;
   object-fit: cover;
   border-radius: 12px;
-  margin-bottom: 1.25rem;
+  margin-bottom: 1.5rem;
 }
 
 .how-card p {
-  font-size: 1rem;
-  color: #444;
+  font-size: 1.1rem;
+  color: var(--text-secondary);
   line-height: 1.6;
+}
+
+@media (max-width: 768px) {
+  .how-section {
+    padding: 4rem 1rem;
+  }
+
+  .how-section h2 {
+    font-size: 2rem;
+  }
 }
