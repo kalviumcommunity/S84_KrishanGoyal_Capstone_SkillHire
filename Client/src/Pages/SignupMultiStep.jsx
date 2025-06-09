@@ -43,6 +43,14 @@ export default function SignupMultiStep() {
     };
   }, []);
 
+  const isValidEmail = (email) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  };
+
+  const isValidPhone = (phone) => {
+    return /^(\+?\d{10,15})$/.test(phone);
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setError(null);
@@ -139,6 +147,18 @@ export default function SignupMultiStep() {
     e.preventDefault();
     setLoading(true);
     setError(null);
+
+    if (!isValidEmail(form.email)) {
+      setError("Please enter a valid email address.");
+      setLoading(false);
+      return;
+    }
+
+    if (form.phone && !isValidPhone(form.phone)) {
+      setError("Please enter a valid phone number (10-15 digits, numbers only).");
+      setLoading(false);
+      return;
+    }
 
     try {
       const res = await axios.post(
@@ -256,17 +276,15 @@ export default function SignupMultiStep() {
 
   return (
     <GoogleOAuthProvider clientId={googleClientId}>
-      {" "}
       <div className="signup-bg-art">
-        {" "}
         {successMessage && (
           <div className="custom-success-alert">{successMessage}</div>
         )}
         {error && (
           <div className="custom-error-alert">{error}</div>
         )}
-        <div className="circle circle1"></div>{" "}
-        <div className="circle circle2"></div>{" "}
+        <div className="circle circle1"></div>
+        <div className="circle circle2"></div>
         <div className="circle circle3"></div>
         <h2 className="signup-heading-outer">Sign Up</h2>
         <div className="signup-container">
@@ -318,8 +336,9 @@ export default function SignupMultiStep() {
                     value={form.phone}
                     onChange={handleChange}
                     autoComplete="tel"
-                    pattern="[0-9]{10,15}"
-                    title="Please enter a valid phone number (numbers only)"
+                    pattern="^\+?\d{10,15}$"
+                    title="Please enter a valid phone number (10-15 digits, numbers only)"
+                    required
                   />
                 </div>
 
