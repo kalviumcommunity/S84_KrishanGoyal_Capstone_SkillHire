@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import axios from "axios";
+import { GoogleLogin } from "@react-oauth/google";
 import "../Styles/Login.css";
 import "../Styles/PageTransitions.css";
 const baseUrl = import.meta.env.VITE_API_BASE_URL;
@@ -18,6 +19,7 @@ export default function Login() {
   });
 
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   useEffect(() => {
     document.body.style.overflow = "hidden";
@@ -83,6 +85,62 @@ export default function Login() {
     } finally {
       setLoading(false);
     }
+  };
+
+  // GOOGLE LOGIN HANDLER
+  const handleGoogleLoginSuccess = async (credentialResponse) => {
+    setGoogleLoading(true);
+    setError(null);
+
+    try {
+      const res = await axios.post(
+        `${baseUrl}/api/auth/google`,
+        { token: credentialResponse.credential },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          withCredentials: true,
+        }
+      );
+      if (res.data?.success && res.data.token && res.data.user) {
+        await login(res.data.user, res.data.token);
+        setSuccessMessage("Login successful!");
+        setTimeout(() => setSuccessMessage(""), 400);
+        const container = document.querySelector('.login-container');
+        container.classList.add('success-transition');
+        setTimeout(() => {
+          switch (res.data.user.role) {
+            case "client":
+              navigate("/client", { replace: true });
+              break;
+            case "go-worker":
+              navigate("/go", { replace: true });
+              break;
+            case "pro-worker":
+              navigate("/pro", { replace: true });
+              break;
+            default:
+              navigate("/", { replace: true });
+          }
+        }, 800);
+      } else {
+        setError("Google login failed. Please try again.");
+      }
+    } catch (err) {
+      setError(
+        err.response?.data?.error ||
+        err.response?.data?.message ||
+        "Google login failed. Please try again."
+      );
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
+
+  const handleGoogleLoginError = () => {
+    setError("Google login failed. Please try again.");
   };
 
   const handleNavigateToSignup = () => {
@@ -160,13 +218,22 @@ export default function Login() {
                 {loading ? "Logging In..." : "Log In"}
               </button>
 
-              <button type="button" className="login-btn-google">
-                <img
-                  src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/180px-Google_%22G%22_logo.svg.png"
-                  alt="Google"
+              <div style={{ marginTop: 8, width: "100%" }}>
+                <GoogleLogin
+                  onSuccess={handleGoogleLoginSuccess}
+                  onError={handleGoogleLoginError}
+                  useOneTap
+                  theme="filled_blue"
+                  size="large"
+                  text="continue_with"
+                  shape="pill"
+                  width="410"
+                  disabled={googleLoading}
                 />
-                Google
-              </button>
+                {googleLoading && (
+                  <div className="google-loading">Processing...</div>
+                )}
+              </div>
             </div>
 
             <div className="signup-link adjusted-login-link">

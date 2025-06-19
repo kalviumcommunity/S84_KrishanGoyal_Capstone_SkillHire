@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
+import { GoogleLogin } from "@react-oauth/google";
 import axios from "axios";
 import { useAuth } from "../context/AuthContext";
 import "../Styles/SignupMultiStep.css";
 import "../Styles/PageTransitions.css";
 
 const baseUrl = import.meta.env.VITE_API_BASE_URL;
-const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
 export default function SignupMultiStep() {
   const navigate = useNavigate();
@@ -43,13 +42,8 @@ export default function SignupMultiStep() {
     };
   }, []);
 
-  const isValidEmail = (email) => {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  };
-
-  const isValidPhone = (phone) => {
-    return /^(\+?\d{10,15})$/.test(phone);
-  };
+  const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const isValidPhone = (phone) => /^(\+?\d{10,15})$/.test(phone);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -99,6 +93,7 @@ export default function SignupMultiStep() {
     }));
   };
 
+  // GOOGLE SIGNUP HANDLER
   const handleGoogleLoginSuccess = async (credentialResponse) => {
     setGoogleLoading(true);
     setError(null);
@@ -119,16 +114,17 @@ export default function SignupMultiStep() {
       if (response.data?.success) {
         await login(response.data.user, response.data.token);
 
-        if (!response.data.user.role) {
+        // If user has no role, go to step 2 (profile completion)
+        if (!response.data.user.role || !response.data.user.isProfileComplete) {
           setStep(2);
         } else {
+          // Otherwise, redirect to dashboard
           navigate(`/${response.data.user.role}`, { replace: true });
         }
       } else {
         throw new Error(response.data?.error || "Authentication failed");
       }
     } catch (error) {
-      console.error("Google login error:", error);
       setError(
         error.response?.data?.error ||
           error.message ||
@@ -143,6 +139,7 @@ export default function SignupMultiStep() {
     setError("Google login failed. Please try again or use email signup.");
   };
 
+  // EMAIL SIGNUP HANDLER
   const handleStep1Submit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -178,20 +175,22 @@ export default function SignupMultiStep() {
         await login(res.data.user, res.data.token);
         setSuccessMessage("Account created successfully!");
         setTimeout(() => setSuccessMessage(""), 400);
-        setTimeout(() => setStep(2), 1000);
+        setTimeout(() => setStep(2), 1000); // Go to next step
       } else {
         throw new Error("Invalid response from server");
       }
     } catch (err) {
-      console.error("Signup error:", err);
       setError(
-        err.response?.data?.message || "Signup failed. Please try again."
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        "Signup failed. Please try again."
       );
     } finally {
       setLoading(false);
     }
   };
 
+  // PROFILE COMPLETION HANDLER
   const handleStep2Submit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -203,10 +202,7 @@ export default function SignupMultiStep() {
         throw new Error("No authentication token found");
       }
 
-      const payload = {
-        role: form.role,
-      };
-
+      const payload = { role: form.role };
       if (form.role === "go-worker") {
         payload.goSkills = form.goSkills;
         payload.hourlyRate = form.hourlyRate;
@@ -235,8 +231,6 @@ export default function SignupMultiStep() {
         await login(res.data.user, res.data.token);
         setSuccessMessage("Profile completed successfully!");
         setTimeout(() => setSuccessMessage(""), 400);
-        const container = document.querySelector('.signup-container');
-        container.classList.add('success-transition');
 
         setTimeout(() => {
           switch (form.role) {
@@ -259,7 +253,8 @@ export default function SignupMultiStep() {
     } catch (err) {
       setError(
         err.response?.data?.error ||
-          "Failed to complete profile. Please try again."
+        err.response?.data?.message ||
+        "Failed to complete profile. Please try again."
       );
     } finally {
       setLoading(false);
@@ -268,335 +263,333 @@ export default function SignupMultiStep() {
 
   const handleNavigateToLogin = () => {
     const container = document.querySelector('.signup-container');
-    container.classList.add('slide-out');
+    if (container) container.classList.add('slide-out');
     setTimeout(() => {
       navigate('/login');
     }, 600);
   };
 
   return (
-    <GoogleOAuthProvider clientId={googleClientId}>
-      <div className="signup-bg-art">
-        {successMessage && (
-          <div className="custom-success-alert">{successMessage}</div>
-        )}
-        {error && (
-          <div className="custom-error-alert">{error}</div>
-        )}
-        <div className="circle circle1"></div>
-        <div className="circle circle2"></div>
-        <div className="circle circle3"></div>
-        <h2 className="signup-heading-outer">Sign Up</h2>
-        <div className="signup-container">
-          <div className="signup-form-section">
-            {step === 1 && (
-              <form onSubmit={handleStep1Submit} className="signup-form">
-                <div className="form-group">
-                  <label>Full Name</label>
-                  <input
-                    type="text"
-                    name="fullName"
-                    value={form.fullName}
-                    onChange={handleChange}
-                    required
-                    autoComplete="name"
-                  />
-                </div>
+    <div className="signup-bg-art">
+      {successMessage && (
+        <div className="custom-success-alert">{successMessage}</div>
+      )}
+      {error && (
+        <div className="custom-error-alert">{error}</div>
+      )}
+      <div className="circle circle1"></div>
+      <div className="circle circle2"></div>
+      <div className="circle circle3"></div>
+      <h2 className="signup-heading-outer">Sign Up</h2>
+      <div className="signup-container">
+        <div className="signup-form-section">
+          {step === 1 && (
+            <form onSubmit={handleStep1Submit} className="signup-form">
+              <div className="form-group">
+                <label>Full Name</label>
+                <input
+                  type="text"
+                  name="fullName"
+                  value={form.fullName}
+                  onChange={handleChange}
+                  required
+                  autoComplete="name"
+                />
+              </div>
 
-                <div className="form-group">
-                  <label>Email</label>
-                  <input
-                    type="email"
-                    name="email"
-                    value={form.email}
-                    onChange={handleChange}
-                    required
-                    autoComplete="email"
-                  />
-                </div>
+              <div className="form-group">
+                <label>Email</label>
+                <input
+                  type="email"
+                  name="email"
+                  value={form.email}
+                  onChange={handleChange}
+                  required
+                  autoComplete="email"
+                />
+              </div>
 
-                <div className="form-group">
-                  <label>Password</label>
-                  <input
-                    type="password"
-                    name="password"
-                    value={form.password}
-                    onChange={handleChange}
-                    required
-                    minLength="6"
-                    autoComplete="new-password"
-                  />
-                </div>
+              <div className="form-group">
+                <label>Password</label>
+                <input
+                  type="password"
+                  name="password"
+                  value={form.password}
+                  onChange={handleChange}
+                  required
+                  minLength="6"
+                  autoComplete="new-password"
+                />
+              </div>
 
-                <div className="form-group">
-                  <label>Phone</label>
-                  <input
-                    type="tel"
-                    name="phone"
-                    value={form.phone}
-                    onChange={handleChange}
-                    autoComplete="tel"
-                    pattern="^\+?\d{10,15}$"
-                    title="Please enter a valid phone number (10-15 digits, numbers only)"
-                    required
-                  />
-                </div>
+              <div className="form-group">
+                <label>Phone</label>
+                <input
+                  type="tel"
+                  name="phone"
+                  value={form.phone}
+                  onChange={handleChange}
+                  autoComplete="tel"
+                  pattern="^\+?\d{10,15}$"
+                  title="Please enter a valid phone number (10-15 digits, numbers only)"
+                  required
+                />
+              </div>
 
-                <div className="form-group checkbox-group">
-                  <input type="checkbox" id="terms" required />
-                  <label htmlFor="terms">
-                    I agree to the <a href="#">Terms & Conditions</a>
-                  </label>
-                </div>
+              <div className="form-group checkbox-group">
+                <input type="checkbox" id="terms" required />
+                <label htmlFor="terms">
+                  I agree to the <a href="#">Terms & Conditions</a>
+                </label>
+              </div>
 
-                <div className="signup-btn-row">
-                  <button
-                    type="submit"
-                    className="signup-btn-unique"
-                    disabled={loading}
-                  >
-                    {loading ? <span className="button-loader"></span> : "Next"}
-                  </button>
-                </div>
+              <div className="signup-btn-row">
+                <button
+                  type="submit"
+                  className="signup-btn-unique"
+                  disabled={loading}
+                >
+                  {loading ? <span className="button-loader"></span> : "Next"}
+                </button>
+              </div>
 
-                <div className="divider">
-                  <span>or</span>
-                </div>
+              <div className="divider">
+                <span>or</span>
+              </div>
 
-                <div className="google-login-container">
-                  <GoogleLogin
-                    onSuccess={handleGoogleLoginSuccess}
-                    onError={handleGoogleLoginError}
-                    useOneTap
-                    theme="filled_blue"
-                    size="large"
-                    text="signup_with"
-                    shape="pill"
-                    width="300"
-                    disabled={googleLoading}
-                  />
-                  {googleLoading && (
-                    <div className="google-loading">Processing...</div>
-                  )}
-                </div>
+              <div className="google-login-container">
+                <GoogleLogin
+                  onSuccess={handleGoogleLoginSuccess}
+                  onError={handleGoogleLoginError}
+                  useOneTap
+                  theme="filled_blue"
+                  size="large"
+                  text="continue_with"
+                  shape="pill"
+                  width="300"
+                  disabled={googleLoading}
+                />
+                {googleLoading && (
+                  <div className="google-loading">Processing...</div>
+                )}
+              </div>
 
-                <div className="login-redirect">
-                  Already have an account?{" "}
-                  <button
-                    type="button"
-                    className="login-link"
-                    onClick={handleNavigateToLogin}
-                  >
-                    Login
-                  </button>
-                </div>
-              </form>
-            )}
+              <div className="login-redirect">
+                Already have an account?{" "}
+                <button
+                  type="button"
+                  className="login-link"
+                  onClick={handleNavigateToLogin}
+                >
+                  Login
+                </button>
+              </div>
+            </form>
+          )}
 
-            {step === 2 && (
-              <form onSubmit={handleStep2Submit} className="signup-form">
-                <div className="form-group">
-                  <label>Role</label>
-                  <select
-                    name="role"
-                    value={form.role}
-                    onChange={handleChange}
-                    required
-                  >
-                    <option value="">-- Select Role --</option>
-                    <option value="client">Client</option>
-                    <option value="go-worker">Go-Worker</option>
-                    <option value="pro-worker">Pro-Worker</option>
-                  </select>
-                </div>
+          {step === 2 && (
+            <form onSubmit={handleStep2Submit} className="signup-form">
+              <div className="form-group">
+                <label>Role</label>
+                <select
+                  name="role"
+                  value={form.role}
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="">-- Select Role --</option>
+                  <option value="client">Client</option>
+                  <option value="go-worker">Go-Worker</option>
+                  <option value="pro-worker">Pro-Worker</option>
+                </select>
+              </div>
 
-                {form.role === "go-worker" && (
-                  <>
-                    <div className="form-group">
-                      <label>Go-Worker Skills</label>
-                      <div className="skill-input-row">
-                        <input
-                          type="text"
-                          value={goSkillInput}
-                          onChange={(e) => setGoSkillInput(e.target.value)}
-                          placeholder="Enter a skill"
-                        />
-                        <button
-                          type="button"
-                          onClick={handleAddGoSkill}
-                          className="add-skill-btn"
-                          disabled={!goSkillInput.trim()}
-                        >
-                          Add
-                        </button>
-                      </div>
-                      {form.goSkills.length > 0 && (
-                        <div className="skill-tags">
-                          {form.goSkills.map((skill, idx) => (
-                            <span key={idx} className="skill-tag">
-                              {skill}
-                              <button
-                                type="button"
-                                onClick={() => handleRemoveGoSkill(idx)}
-                                className="remove-skill-btn"
-                                aria-label={`Remove ${skill}`}
-                              >
-                                ×
-                              </button>
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="form-group">
-                      <label>Hourly Rate (₹)</label>
-                      <input
-                        type="number"
-                        name="hourlyRate"
-                        value={form.hourlyRate}
-                        onChange={handleChange}
-                        min="0"
-                        step="0.01"
-                        required
-                      />
-                    </div>
-
-                    <div className="form-group">
-                      <label>City</label>
+              {form.role === "go-worker" && (
+                <>
+                  <div className="form-group">
+                    <label>Go-Worker Skills</label>
+                    <div className="skill-input-row">
                       <input
                         type="text"
-                        name="city"
-                        value={form.location.city}
-                        onChange={handleChange}
-                        required
+                        value={goSkillInput}
+                        onChange={(e) => setGoSkillInput(e.target.value)}
+                        placeholder="Enter a skill"
                       />
+                      <button
+                        type="button"
+                        onClick={handleAddGoSkill}
+                        className="add-skill-btn"
+                        disabled={!goSkillInput.trim()}
+                      >
+                        Add
+                      </button>
                     </div>
-
-                    <div className="form-group">
-                      <label>Sub City</label>
-                      <input
-                        type="text"
-                        name="subCity"
-                        value={form.location.subCity}
-                        onChange={handleChange}
-                      />
-                    </div>
-                  </>
-                )}
-
-                {form.role === "pro-worker" && (
-                  <>
-                    <div className="form-group">
-                      <label>Pro-Worker Skills</label>
-                      <div className="skill-input-row">
-                        <input
-                          type="text"
-                          value={proSkillInput}
-                          onChange={(e) => setProSkillInput(e.target.value)}
-                          placeholder="Enter a skill"
-                        />
-                        <button
-                          type="button"
-                          onClick={handleAddProSkill}
-                          className="add-skill-btn"
-                          disabled={!proSkillInput.trim()}
-                        >
-                          Add
-                        </button>
+                    {form.goSkills.length > 0 && (
+                      <div className="skill-tags">
+                        {form.goSkills.map((skill, idx) => (
+                          <span key={idx} className="skill-tag">
+                            {skill}
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveGoSkill(idx)}
+                              className="remove-skill-btn"
+                              aria-label={`Remove ${skill}`}
+                            >
+                              ×
+                            </button>
+                          </span>
+                        ))}
                       </div>
-                      {form.proSkills.length > 0 && (
-                        <div className="skill-tags">
-                          {form.proSkills.map((skill, idx) => (
-                            <span key={idx} className="skill-tag">
-                              {skill}
-                              <button
-                                type="button"
-                                onClick={() => handleRemoveProSkill(idx)}
-                                className="remove-skill-btn"
-                                aria-label={`Remove ${skill}`}
-                              >
-                                ×
-                              </button>
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="form-group">
-                      <label>Portfolio URL</label>
-                      <input
-                        type="url"
-                        name="portfolioUrl"
-                        value={form.portfolioUrl}
-                        onChange={handleChange}
-                        placeholder="https://example.com"
-                        required
-                      />
-                    </div>
-
-                    <div className="form-group">
-                      <label>Minimum Project Rate (₹)</label>
-                      <input
-                        type="number"
-                        name="minProjectRate"
-                        value={form.minProjectRate}
-                        onChange={handleChange}
-                        min="0"
-                        step="0.01"
-                        required
-                      />
-                    </div>
-                  </>
-                )}
-
-                <div className="signup-btn-row">
-                  <button
-                    type="button"
-                    className="signup-btn-google"
-                    onClick={() => {
-                      setStep(1);
-                      setError(null);
-                    }}
-                    disabled={loading}
-                  >
-                    Back
-                  </button>
-
-                  <button
-                    type="submit"
-                    className="signup-btn-unique"
-                    disabled={loading}
-                  >
-                    {loading ? (
-                      <span className="button-loader"></span>
-                    ) : (
-                      "Complete Profile"
                     )}
-                  </button>
-                </div>
-              </form>
-            )}
-          </div>
+                  </div>
 
-          <div className="signup-design-section">
-            <div className="design-overlay">
-              <h1>Welcome to SkillHire</h1>
-              <p>
-                Find the best talent or your next opportunity.
-                <br />
-                Join a growing community of skilled professionals.
-              </p>
-              <ul>
-                <li>✔️ Fast & Secure Signup</li>
-                <li>✔️ Verified Talent</li>
-                <li>✔️ Smart Matching</li>
-              </ul>
-            </div>
+                  <div className="form-group">
+                    <label>Hourly Rate (₹)</label>
+                    <input
+                      type="number"
+                      name="hourlyRate"
+                      value={form.hourlyRate}
+                      onChange={handleChange}
+                      min="0"
+                      step="0.01"
+                      required
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label>City</label>
+                    <input
+                      type="text"
+                      name="city"
+                      value={form.location.city}
+                      onChange={handleChange}
+                      required
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label>Sub City</label>
+                    <input
+                      type="text"
+                      name="subCity"
+                      value={form.location.subCity}
+                      onChange={handleChange}
+                    />
+                  </div>
+                </>
+              )}
+
+              {form.role === "pro-worker" && (
+                <>
+                  <div className="form-group">
+                    <label>Pro-Worker Skills</label>
+                    <div className="skill-input-row">
+                      <input
+                        type="text"
+                        value={proSkillInput}
+                        onChange={(e) => setProSkillInput(e.target.value)}
+                        placeholder="Enter a skill"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleAddProSkill}
+                        className="add-skill-btn"
+                        disabled={!proSkillInput.trim()}
+                      >
+                        Add
+                      </button>
+                    </div>
+                    {form.proSkills.length > 0 && (
+                      <div className="skill-tags">
+                        {form.proSkills.map((skill, idx) => (
+                          <span key={idx} className="skill-tag">
+                            {skill}
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveProSkill(idx)}
+                              className="remove-skill-btn"
+                              aria-label={`Remove ${skill}`}
+                            >
+                              ×
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="form-group">
+                    <label>Portfolio URL</label>
+                    <input
+                      type="url"
+                      name="portfolioUrl"
+                      value={form.portfolioUrl}
+                      onChange={handleChange}
+                      placeholder="https://example.com"
+                      required
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label>Minimum Project Rate (₹)</label>
+                    <input
+                      type="number"
+                      name="minProjectRate"
+                      value={form.minProjectRate}
+                      onChange={handleChange}
+                      min="0"
+                      step="0.01"
+                      required
+                    />
+                  </div>
+                </>
+              )}
+
+              <div className="signup-btn-row">
+                <button
+                  type="button"
+                  className="signup-btn-google"
+                  onClick={() => {
+                    setStep(1);
+                    setError(null);
+                  }}
+                  disabled={loading}
+                >
+                  Back
+                </button>
+
+                <button
+                  type="submit"
+                  className="signup-btn-unique"
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <span className="button-loader"></span>
+                  ) : (
+                    "Complete Profile"
+                  )}
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
+
+        <div className="signup-design-section">
+          <div className="design-overlay">
+            <h1>Welcome to SkillHire</h1>
+            <p>
+              Find the best talent or your next opportunity.
+              <br />
+              Join a growing community of skilled professionals.
+            </p>
+            <ul>
+              <li>✔️ Fast & Secure Signup</li>
+              <li>✔️ Verified Talent</li>
+              <li>✔️ Smart Matching</li>
+            </ul>
           </div>
         </div>
       </div>
-    </GoogleOAuthProvider>
+    </div>
   );
 }
