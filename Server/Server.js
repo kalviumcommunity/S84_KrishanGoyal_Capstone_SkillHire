@@ -33,14 +33,12 @@ require('dotenv').config()
 const port = process.env.PORT || 3000;
 const db = process.env.DB_URI
 
-const User = require('./Routes/userRoutes')
 const goProjectRoutes = require('./Routes/goProjectRoutes')
 const proProjectRoutes = require('./Routes/proProjectRoutes')
 const Auth = require('./Routes/authRoutes');
 const allProjects = require('./Routes/allProjects')
 
 
-app.use('/api/users', User)
 app.use('/api/go-projects', goProjectRoutes)
 app.use('/api/pro-projects', proProjectRoutes)
 app.use('/api/projects', allProjects)

@@ -54,6 +54,8 @@ const UserSchema = new Schema({
   completedproject:{type: Number, default: 0},
   pendingPayments: {type: Number, default: 0},
 
+  requiredSkills: [String],
+
   // Shared for workers
   ratingsReceived: [{
     clientId: { type: ObjectId, ref: 'User' },

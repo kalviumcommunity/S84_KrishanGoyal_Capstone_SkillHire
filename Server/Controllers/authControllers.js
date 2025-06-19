@@ -266,11 +266,32 @@ const logout = async (req, res) => {
     }
 };
 
+const updateUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (req.user._id.toString() !== id.toString()) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+    const allowedFields = ['fullName', 'phone', 'description', 'requiredSkills'];
+    const updateData = {};
+    allowedFields.forEach(field => {
+      if (req.body[field] !== undefined) updateData[field] = req.body[field];
+    });
+
+    const updated = await User.findByIdAndUpdate(id, updateData, { new: true });
+    if (!updated) return res.status(404).json({ error: "User not found" });
+    res.json({ data: updated });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to update profile" });
+  }
+};
+
 module.exports = {
     signup,
     completeProfile,
     login,
     getMe,
     googleAuth,
-    logout
+    logout,
+    updateUser
 };

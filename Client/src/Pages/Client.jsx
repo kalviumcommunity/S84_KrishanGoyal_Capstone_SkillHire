@@ -24,7 +24,8 @@ const Client = () => {
   });
   const [creatingProject, setCreatingProject] = useState(false);
   const [error, setError] = useState(null);
-  const [showSuccessAlert, setShowSuccessAlert] = useState(false); // <-- NEW
+  const [showSuccessAlert, setShowSuccessAlert] = useState(false);
+  const [editingProject, setEditingProject] = useState(null); // <-- NEW
 
   const baseUrl = import.meta.env.VITE_API_BASE_URL;
 
@@ -76,16 +77,29 @@ const Client = () => {
     fetchProjects();
   }, [projectType, baseUrl, user?._id]);
 
-  const handleCreateProject = async (e) => {
+  // Unified handler for create and edit
+  const handleCreateOrEditProject = async (e) => {
     e.preventDefault();
     setCreatingProject(true);
     setError(null);
 
     try {
-      const endpoint =
-        newProject.type === "go"
-          ? `${baseUrl}/api/go-projects/add`
-          : `${baseUrl}/api/pro-projects/add`;
+      let endpoint, method;
+      if (editingProject) {
+        // Editing
+        endpoint =
+          newProject.type === "go"
+            ? `${baseUrl}/api/go-projects/${editingProject._id}`
+            : `${baseUrl}/api/pro-projects/${editingProject._id}`;
+        method = "put";
+      } else {
+        // Creating
+        endpoint =
+          newProject.type === "go"
+            ? `${baseUrl}/api/go-projects/add`
+            : `${baseUrl}/api/pro-projects/add`;
+        method = "post";
+      }
 
       const payload = {
         title: newProject.title,
@@ -102,13 +116,22 @@ const Client = () => {
         payload.budget = Number(newProject.budget);
       }
 
-      const response = await axios.post(endpoint, payload, {
+      const response = await axios[method](endpoint, payload, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("authToken")}`,
         },
       });
 
-      setProjects([response.data.project, ...projects]);
+      if (editingProject) {
+        setProjects(
+          projects.map((p) =>
+            p._id === editingProject._id ? response.data.project : p
+          )
+        );
+      } else {
+        setProjects([response.data.project, ...projects]);
+      }
+
       setShowCreateModal(false);
       setNewProject({
         type: "go",
@@ -120,11 +143,16 @@ const Client = () => {
         dueDate: "",
         budget: "",
       });
+      setEditingProject(null);
       setShowSuccessAlert(true);
       setTimeout(() => setShowSuccessAlert(false), 2000);
     } catch (error) {
-      console.error("Error creating project:", error);
-      setError(error.response?.data?.message || "Failed to create project");
+      console.error("Error creating/updating project:", error);
+      setError(
+        error.response?.data?.error ||
+          error.response?.data?.message ||
+          "Failed to create/update project"
+      );
     } finally {
       setCreatingProject(false);
     }
@@ -205,7 +233,11 @@ const Client = () => {
               </div>
               <div className="detail-item">
                 <span className="detail-label">Due Date:</span>
-                <span>{new Date(project.dueDate).toLocaleDateString()}</span>
+                <span>
+                  {project.dueDate
+                    ? new Date(project.dueDate).toLocaleDateString()
+                    : ""}
+                </span>
               </div>
               <div className="detail-item">
                 <span className="detail-label">Applicants:</span>
@@ -223,7 +255,27 @@ const Client = () => {
             View Details
           </Link>
           {project.status === "yet to be assigned" && (
-            <button className="edit-btn">Edit</button>
+            <button
+              className="edit-btn"
+              onClick={() => {
+                setEditingProject(project);
+                setNewProject({
+                  type: project.type,
+                  title: project.title,
+                  description: project.description,
+                  city: project.city || "",
+                  subCity: project.subCity || "",
+                  category: project.category || "",
+                  dueDate: project.dueDate
+                    ? project.dueDate.split("T")[0]
+                    : "",
+                  budget: project.budget || "",
+                });
+                setShowCreateModal(true);
+              }}
+            >
+              Edit
+            </button>
           )}
         </div>
       </div>
@@ -233,29 +285,42 @@ const Client = () => {
   const renderCreateProjectModal = () => (
     <div className="modal-overlay">
       <div className="create-project-modal">
-        <h2>Create New {newProject.type.toUpperCase()} Project</h2>
+        <h2>
+          {editingProject
+            ? `Edit ${newProject.type.toUpperCase()} Project`
+            : `Create New ${newProject.type.toUpperCase()} Project`}
+        </h2>
         <button
           className="close-modal"
-          onClick={() => setShowCreateModal(false)}
+          onClick={() => {
+            setShowCreateModal(false);
+            setEditingProject(null);
+          }}
         >
           &times;
         </button>
         <div className="modal-content">
-          <form onSubmit={handleCreateProject}>
+          <form onSubmit={handleCreateOrEditProject}>
             <div className="form-group">
               <label>Project Type</label>
               <div className="type-toggle">
                 <button
                   type="button"
                   className={newProject.type === "go" ? "active" : ""}
-                  onClick={() => setNewProject({ ...newProject, type: "go" })}
+                  onClick={() =>
+                    setNewProject({ ...newProject, type: "go" })
+                  }
+                  disabled={!!editingProject}
                 >
                   GO Project
                 </button>
                 <button
                   type="button"
                   className={newProject.type === "pro" ? "active" : ""}
-                  onClick={() => setNewProject({ ...newProject, type: "pro" })}
+                  onClick={() =>
+                    setNewProject({ ...newProject, type: "pro" })
+                  }
+                  disabled={!!editingProject}
                 >
                   PRO Project
                 </button>
@@ -356,8 +421,11 @@ const Client = () => {
               >
                 {creatingProject ? (
                   <>
-                    <span className="spinner"></span> Creating...
+                    <span className="spinner"></span>{" "}
+                    {editingProject ? "Updating..." : "Creating..."}
                   </>
+                ) : editingProject ? (
+                  "Update Project"
                 ) : (
                   "Create Project"
                 )}
@@ -365,7 +433,10 @@ const Client = () => {
               <button
                 type="button"
                 className="cancel-btn"
-                onClick={() => setShowCreateModal(false)}
+                onClick={() => {
+                  setShowCreateModal(false);
+                  setEditingProject(null);
+                }}
               >
                 Cancel
               </button>
@@ -385,7 +456,7 @@ const Client = () => {
       <NavbarDashboards />
       {showSuccessAlert && (
         <div className="custom-success-alert">
-          Project created successfully!
+          Project {editingProject ? "updated" : "created"} successfully!
         </div>
       )}
       <div className="client-dashboard">
@@ -409,7 +480,20 @@ const Client = () => {
           <div className="dashboard-actions">
             <button
               className="new-project-btn"
-              onClick={() => setShowCreateModal(true)}
+              onClick={() => {
+                setShowCreateModal(true);
+                setEditingProject(null);
+                setNewProject({
+                  type: "go",
+                  title: "",
+                  description: "",
+                  city: "",
+                  subCity: "",
+                  category: "",
+                  dueDate: "",
+                  budget: "",
+                });
+              }}
             >
               + New Project
             </button>
@@ -428,7 +512,20 @@ const Client = () => {
               </p>
               <button
                 className="create-first-btn"
-                onClick={() => setShowCreateModal(true)}
+                onClick={() => {
+                  setShowCreateModal(true);
+                  setEditingProject(null);
+                  setNewProject({
+                    type: "go",
+                    title: "",
+                    description: "",
+                    city: "",
+                    subCity: "",
+                    category: "",
+                    dueDate: "",
+                    budget: "",
+                  });
+                }}
               >
                 Create your first project
               </button>

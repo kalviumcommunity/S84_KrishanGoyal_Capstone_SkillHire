@@ -54,6 +54,10 @@ const updateGoProject = async (req, res) => {
       return res.status(403).json({ error: 'You are not authorized to update this project' });
     }
 
+    if (project.status !== "yet to be assigned") {
+      return res.status(400).json({ error: "Cannot edit a project that is already assigned or completed" });
+    }
+
     const updatedProject = await GoProject.findByIdAndUpdate(id, updateData, { new: true });
 
     res.status(200).json({
@@ -110,11 +114,11 @@ const getGoProject = async (req, res) => {
     const project = await GoProject.findById(req.params.projectId)
       .populate('postedBy', 'name email')
       .populate('assignedTo', 'name email');
-      
+
     if (!project) {
       return res.status(404).json({ error: 'GO Project not found' });
     }
-    
+
     res.json({ project });
   } catch (error) {
     res.status(500).json({ error: 'Server error fetching GO project' });

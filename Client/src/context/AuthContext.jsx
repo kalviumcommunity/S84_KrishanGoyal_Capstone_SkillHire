@@ -20,7 +20,6 @@ export const AuthProvider = ({ children }) => {
         const checkAuth = async () => {
             try {
                 const token = localStorage.getItem('authToken');
-                
                 if (token) {
                     const response = await axios.get(`${baseUrl}/api/auth/me`, {
                         headers: {
@@ -28,7 +27,6 @@ export const AuthProvider = ({ children }) => {
                         },
                         withCredentials: true
                     });
-                    
                     if (response.data.user) {
                         const userData = response.data.user;
                         setUser(userData);
@@ -50,7 +48,6 @@ export const AuthProvider = ({ children }) => {
                 setLoading(false);
             }
         };
-
         checkAuth();
     }, [baseUrl]);
 
@@ -58,19 +55,16 @@ export const AuthProvider = ({ children }) => {
         if (!token) {
             return;
         }
-
         try {
             localStorage.setItem('authToken', token);
             setUser(userData);
             localStorage.setItem('user', JSON.stringify(userData));
-            
             const response = await axios.get(`${baseUrl}/api/auth/me`, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 },
                 withCredentials: true
             });
-            
             if (!response.data.user) {
                 throw new Error('Login verification failed - no user data returned');
             }
@@ -97,8 +91,10 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    // 👇 Add setUser to the value
     const value = {
         user,
+        setUser,
         loading,
         login,
         logout
@@ -109,4 +105,4 @@ export const AuthProvider = ({ children }) => {
             {!loading && children}
         </AuthContext.Provider>
     );
-}; 
+};

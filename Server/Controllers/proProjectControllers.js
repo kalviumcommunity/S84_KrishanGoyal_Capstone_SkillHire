@@ -60,6 +60,10 @@ const updateProProject = async (req, res) => {
       return res.status(403).json({ error: 'You are not authorized to update this project' });
     }
 
+    if (project.status !== "yet to be assigned") {
+      return res.status(400).json({ error: "Cannot edit a project that is already assigned or completed" });
+    }
+
     const updatedProject = await ProProject.findByIdAndUpdate(id, updateData, { new: true });
 
     res.status(200).json({
