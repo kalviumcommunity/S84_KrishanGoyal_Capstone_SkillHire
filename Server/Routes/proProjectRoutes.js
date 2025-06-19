@@ -9,7 +9,7 @@ router.get('/assigned', verifyToken, getAssignedProProjects)
 router.get('/earnings', verifyToken, getProEarnings)
 router.get('/applied', verifyToken, getAppliedProjects)
 router.get('/:projectId', getProProject);
-router.get('/my/:id', verifyToken, getMyProProjects)
+router.get('/my/:id', verifyToken, getMyProProjects) 
 router.put('/:id', verifyToken, updateProProject)
 router.delete('/:id', verifyToken, deleteProProject)
 router.post('/:projectId/apply', verifyToken, applyToProProject)

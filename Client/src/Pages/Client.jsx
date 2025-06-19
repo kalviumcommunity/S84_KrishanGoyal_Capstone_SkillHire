@@ -38,7 +38,7 @@ const Client = () => {
   useEffect(() => {
     if (!user?._id) return;
 
-    const fetchProjects = async () => {
+    const fetchProjects = async () => { 
       try {
         setLoading(true);
         setError(null);
