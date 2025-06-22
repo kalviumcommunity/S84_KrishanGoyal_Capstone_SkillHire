@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import '../Styles/Navbar.css';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -34,9 +34,13 @@ const Navbar = () => {
     <nav className="navbar">
       <div className="navbar-inner">
         <div className="navbar-logo">
-          <Link to="/">
-            <img src='./SkillHireLogo.png' alt="SkillHire Logo" className="logo-img" />
-          </Link>
+          <img 
+            src='./SkillHireLogo.png' 
+            alt="SkillHire Logo" 
+            className="logo-img" 
+            onClick={() => navigate('/')}
+            style={{ cursor: 'pointer' }}
+          />
         </div>
         <div className={`navbar-links ${menuOpen ? 'active' : ''}`}>
           <a

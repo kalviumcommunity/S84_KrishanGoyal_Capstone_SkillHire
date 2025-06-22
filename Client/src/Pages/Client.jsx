@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import NavbarDashboards from "../Components/NavbarDashboards";
 import axios from "axios";
 import "../Styles/Client.css";
@@ -266,7 +266,7 @@ const Client = () => {
                     : ""}
                 </span>
               </div>
-              
+
               {/* Conditionally show either assigned worker or applicants count */}
               {project.assignedTo ? (
                 <div className="detail-item assigned-worker">
@@ -282,14 +282,13 @@ const Client = () => {
             </>
           )}
         </div>
-
         <div className="project-actions">
-          <Link
-            to={`/${project.type}-projects/${project._id}`}
+          <button
+            onClick={() => navigate(`/${project.type}-projects/${project._id}`)}
             className="view-btn"
           >
             View Details
-          </Link>
+          </button>
           {project.status === "yet to be assigned" && (
             <button
               className="edit-btn"
