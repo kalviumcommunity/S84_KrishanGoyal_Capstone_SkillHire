@@ -16,7 +16,7 @@ const UserSchema = new Schema({
     default: 'client',
     enum: ['client', 'go-worker', 'pro-worker']
   },
-  description: {type: String, minLength: 10},
+  description: { type: String, minLength: 10 },
   isProfileComplete: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now },
 
@@ -36,7 +36,6 @@ const UserSchema = new Schema({
 
   // Go Worker fields
   goSkills: [String],
-  hourlyRate: Number,
   location: {
     city: String,
     subCity: String
@@ -47,12 +46,11 @@ const UserSchema = new Schema({
   // Pro Worker fields
   proSkills: [String],
   portfolioUrl: String,
-  minProjectRate: Number,
   completedProjects: { type: Number, default: 0 },
-  totalEarnings:{type: Number, default: 0},
-  onGoingProjects:{type: Number, default: 0},
-  completedproject:{type: Number, default: 0},
-  pendingPayments: {type: Number, default: 0},
+  totalEarnings: { type: Number, default: 0 },
+  onGoingProjects: { type: Number, default: 0 },
+  completedproject: { type: Number, default: 0 },
+  pendingPayments: { type: Number, default: 0 },
 
   requiredSkills: [String],
 

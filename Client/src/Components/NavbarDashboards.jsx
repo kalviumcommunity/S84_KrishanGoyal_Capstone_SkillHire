@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import '../Styles/NavbarDashboards.css';
+import React, { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import "../Styles/NavbarDashboards.css";
 
 const NavbarDashboards = () => {
   const navigate = useNavigate();
@@ -11,22 +11,22 @@ const NavbarDashboards = () => {
 
   const handleLogout = () => {
     logout();
-    navigate('/');
+    navigate("/");
   };
 
   const handleRoleBasedNavigation = () => {
     switch (user?.role) {
-      case 'client':
-        navigate('/client');
+      case "client":
+        navigate("/client");
         break;
-      case 'go-worker':
-        navigate('/go');
+      case "go-worker":
+        navigate("/go");
         break;
-      case 'pro-worker':
-        navigate('/pro');
+      case "pro-worker":
+        navigate("/pro");
         break;
       default:
-        navigate('/dashboard');
+        navigate("/dashboard");
     }
   };
 
@@ -37,9 +37,9 @@ const NavbarDashboards = () => {
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
@@ -63,33 +63,67 @@ const NavbarDashboards = () => {
             Home
           </div>
 
-          {user?.role === 'go-worker' && (
-            <Link to="/go-projects" className="dashboard-navbar-link">
-              All Projects (Go)
-            </Link>
-          )}
-
-          {user?.role === 'pro-worker' && (
+          {user?.role === "go-worker" && (
             <>
-              <Link to="/pro-projects" className="dashboard-navbar-link">
-                All Projects (Pro)
-              </Link>
-              <Link to="/applied-projects" className="dashboard-navbar-link">
-                Applied
-              </Link>
+              <div
+                className="dashboard-navbar-link"
+                onClick={() => navigate("/all-go-projects")}
+              >
+                All Projects
+              </div>
+              <div
+                className="dashboard-navbar-link"
+                onClick={() => navigate("/active-go-projects")}
+              >
+                Active Projects
+              </div>
+              <div
+                className="dashboard-navbar-link"
+                onClick={() => navigate("/completed-tasks")}
+              >
+                Completed Tasks
+              </div>
             </>
           )}
 
-          {user?.role === 'client' && (
-            <Link to="/your-projects" className="dashboard-navbar-link">
-              Your Projects
-            </Link>
+          {user?.role === "pro-worker" && (
+            <>
+              <div
+                className="dashboard-navbar-link"
+                onClick={() => navigate("/pro-projects")}
+              >
+                All Projects (Pro)
+              </div>
+              <div
+                className="dashboard-navbar-link"
+                onClick={() => navigate("/applied-projects")}
+              >
+                Applied
+              </div>
+            </>
           )}
 
-          {(user?.role === 'go-worker' || user?.role === 'pro-worker') && (
-            <Link to="/completed-tasks" className="dashboard-navbar-link">
-              Completed Tasks
-            </Link>
+          {user?.role === "client" && (
+            <>
+              <div
+                className="dashboard-navbar-link"
+                onClick={() => navigate("/your-projects")}
+              >
+                Your Projects
+              </div>
+              <div
+                className="dashboard-navbar-link"
+                onClick={() => navigate("/pending-confirmation")}
+              >
+                Pending Confirmation
+              </div>
+              <div
+                className="dashboard-navbar-link"
+                onClick={() => navigate("/closed-projects")}
+              >
+                Closed Projects
+              </div>
+            </>
           )}
 
           <div className="dashboard-profile-container" ref={dropdownRef}>
@@ -115,13 +149,15 @@ const NavbarDashboards = () => {
 
             {showProfileDropdown && (
               <div className="dashboard-profile-dropdown">
-                <Link
-                  to="/profile"
+                <div
                   className="dashboard-dropdown-item"
-                  onClick={() => setShowProfileDropdown(false)}
+                  onClick={() => {
+                    navigate("/profile");
+                    setShowProfileDropdown(false);
+                  }}
                 >
                   View Profile
-                </Link>
+                </div>
                 <button
                   className="dashboard-dropdown-item dashboard-logout-button"
                   onClick={handleLogout}

@@ -18,18 +18,43 @@ export default function SignupMultiStep() {
     phone: "",
     role: "",
     goSkills: [],
-    hourlyRate: "",
     location: { city: "", subCity: "" },
     proSkills: [],
     portfolioUrl: "",
-    minProjectRate: "",
   });
+
+  // Predefined skills for GO workers
+  const predefinedGoSkills = [
+    "Cleaning",
+    "Delivery",
+    "Moving",
+    "Repairs",
+    "Installation",
+    "Gardening",
+    "Painting",
+    "Plumbing",
+    "Electrical Work",
+  ];
+
+  // Predefined skills for PRO workers
+  const predefinedProSkills = [
+    "Web Development",
+    "Mobile App Development",
+    "Graphic Design",
+    "UI/UX Design",
+    "Content Writing",
+    "Digital Marketing",
+    "Video Editing",
+    "Photography",
+  ];
 
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [goSkillInput, setGoSkillInput] = useState("");
   const [proSkillInput, setProSkillInput] = useState("");
+  const [selectedSkill, setSelectedSkill] = useState("");
+  const [selectedProSkill, setSelectedProSkill] = useState("");
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState("");
 
@@ -59,8 +84,29 @@ export default function SignupMultiStep() {
     }
   };
 
+  // Handle adding a skill from dropdown
+  const handleAddSkillFromDropdown = (skillType) => {
+    if (skillType === "go") {
+      if (selectedSkill && !form.goSkills.includes(selectedSkill)) {
+        setForm((prev) => ({
+          ...prev,
+          goSkills: [...prev.goSkills, selectedSkill],
+        }));
+        setSelectedSkill("");
+      }
+    } else {
+      if (selectedProSkill && !form.proSkills.includes(selectedProSkill)) {
+        setForm((prev) => ({
+          ...prev,
+          proSkills: [...prev.proSkills, selectedProSkill],
+        }));
+        setSelectedProSkill("");
+      }
+    }
+  };
+
   const handleAddGoSkill = () => {
-    if (goSkillInput.trim()) {
+    if (goSkillInput.trim() && !form.goSkills.includes(goSkillInput.trim())) {
       setForm((prev) => ({
         ...prev,
         goSkills: [...prev.goSkills, goSkillInput.trim()],
@@ -77,7 +123,10 @@ export default function SignupMultiStep() {
   };
 
   const handleAddProSkill = () => {
-    if (proSkillInput.trim()) {
+    if (
+      proSkillInput.trim() &&
+      !form.proSkills.includes(proSkillInput.trim())
+    ) {
       setForm((prev) => ({
         ...prev,
         proSkills: [...prev.proSkills, proSkillInput.trim()],
@@ -152,7 +201,9 @@ export default function SignupMultiStep() {
     }
 
     if (form.phone && !isValidPhone(form.phone)) {
-      setError("Please enter a valid phone number (10-15 digits, numbers only).");
+      setError(
+        "Please enter a valid phone number (10-15 digits, numbers only)."
+      );
       setLoading(false);
       return;
     }
@@ -182,8 +233,8 @@ export default function SignupMultiStep() {
     } catch (err) {
       setError(
         err.response?.data?.message ||
-        err.response?.data?.error ||
-        "Signup failed. Please try again."
+          err.response?.data?.error ||
+          "Signup failed. Please try again."
       );
     } finally {
       setLoading(false);
@@ -205,12 +256,10 @@ export default function SignupMultiStep() {
       const payload = { role: form.role };
       if (form.role === "go-worker") {
         payload.goSkills = form.goSkills;
-        payload.hourlyRate = form.hourlyRate;
         payload.location = form.location;
       } else if (form.role === "pro-worker") {
         payload.proSkills = form.proSkills;
         payload.portfolioUrl = form.portfolioUrl;
-        payload.minProjectRate = form.minProjectRate;
       }
 
       const axiosInstance = axios.create({
@@ -253,8 +302,8 @@ export default function SignupMultiStep() {
     } catch (err) {
       setError(
         err.response?.data?.error ||
-        err.response?.data?.message ||
-        "Failed to complete profile. Please try again."
+          err.response?.data?.message ||
+          "Failed to complete profile. Please try again."
       );
     } finally {
       setLoading(false);
@@ -262,10 +311,10 @@ export default function SignupMultiStep() {
   };
 
   const handleNavigateToLogin = () => {
-    const container = document.querySelector('.signup-container');
-    if (container) container.classList.add('slide-out');
+    const container = document.querySelector(".signup-container");
+    if (container) container.classList.add("slide-out");
     setTimeout(() => {
-      navigate('/login');
+      navigate("/login");
     }, 600);
   };
 
@@ -274,9 +323,7 @@ export default function SignupMultiStep() {
       {successMessage && (
         <div className="custom-success-alert">{successMessage}</div>
       )}
-      {error && (
-        <div className="custom-error-alert">{error}</div>
-      )}
+      {error && <div className="custom-error-alert">{error}</div>}
       <div className="circle circle1"></div>
       <div className="circle circle2"></div>
       <div className="circle circle3"></div>
@@ -408,12 +455,41 @@ export default function SignupMultiStep() {
                 <>
                   <div className="form-group">
                     <label>Go-Worker Skills</label>
+
+                    {/* Dropdown for predefined skills */}
+                    <div className="skill-input-row">
+                      <select
+                        value={selectedSkill}
+                        onChange={(e) => setSelectedSkill(e.target.value)}
+                        className="skill-dropdown"
+                      >
+                        <option value="">-- Select a skill --</option>
+                        {predefinedGoSkills.map((skill) => (
+                          <option key={skill} value={skill}>
+                            {skill}
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        type="button"
+                        onClick={() => handleAddSkillFromDropdown("go")}
+                        className="add-skill-btn"
+                        disabled={!selectedSkill}
+                      >
+                        Add
+                      </button>
+                    </div>
+
+                    {/* Custom skill input */}
+                    <label className="custom-skill-label">
+                      Or add a custom skill:
+                    </label>
                     <div className="skill-input-row">
                       <input
                         type="text"
                         value={goSkillInput}
                         onChange={(e) => setGoSkillInput(e.target.value)}
-                        placeholder="Enter a skill"
+                        placeholder="Enter a custom skill"
                       />
                       <button
                         type="button"
@@ -424,6 +500,8 @@ export default function SignupMultiStep() {
                         Add
                       </button>
                     </div>
+
+                    {/* Display selected skills */}
                     {form.goSkills.length > 0 && (
                       <div className="skill-tags">
                         {form.goSkills.map((skill, idx) => (
@@ -441,19 +519,6 @@ export default function SignupMultiStep() {
                         ))}
                       </div>
                     )}
-                  </div>
-
-                  <div className="form-group">
-                    <label>Hourly Rate (₹)</label>
-                    <input
-                      type="number"
-                      name="hourlyRate"
-                      value={form.hourlyRate}
-                      onChange={handleChange}
-                      min="0"
-                      step="0.01"
-                      required
-                    />
                   </div>
 
                   <div className="form-group">
@@ -483,12 +548,41 @@ export default function SignupMultiStep() {
                 <>
                   <div className="form-group">
                     <label>Pro-Worker Skills</label>
+
+                    {/* Dropdown for predefined PRO skills */}
+                    <div className="skill-input-row">
+                      <select
+                        value={selectedProSkill}
+                        onChange={(e) => setSelectedProSkill(e.target.value)}
+                        className="skill-dropdown"
+                      >
+                        <option value="">-- Select a skill --</option>
+                        {predefinedProSkills.map((skill) => (
+                          <option key={skill} value={skill}>
+                            {skill}
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        type="button"
+                        onClick={() => handleAddSkillFromDropdown("pro")}
+                        className="add-skill-btn"
+                        disabled={!selectedProSkill}
+                      >
+                        Add
+                      </button>
+                    </div>
+
+                    {/* Custom skill input */}
+                    <label className="custom-skill-label">
+                      Or add a custom skill:
+                    </label>
                     <div className="skill-input-row">
                       <input
                         type="text"
                         value={proSkillInput}
                         onChange={(e) => setProSkillInput(e.target.value)}
-                        placeholder="Enter a skill"
+                        placeholder="Enter a custom skill"
                       />
                       <button
                         type="button"
@@ -499,6 +593,8 @@ export default function SignupMultiStep() {
                         Add
                       </button>
                     </div>
+
+                    {/* Display selected skills */}
                     {form.proSkills.length > 0 && (
                       <div className="skill-tags">
                         {form.proSkills.map((skill, idx) => (
@@ -526,19 +622,6 @@ export default function SignupMultiStep() {
                       value={form.portfolioUrl}
                       onChange={handleChange}
                       placeholder="https://example.com"
-                      required
-                    />
-                  </div>
-
-                  <div className="form-group">
-                    <label>Minimum Project Rate (₹)</label>
-                    <input
-                      type="number"
-                      name="minProjectRate"
-                      value={form.minProjectRate}
-                      onChange={handleChange}
-                      min="0"
-                      step="0.01"
                       required
                     />
                   </div>

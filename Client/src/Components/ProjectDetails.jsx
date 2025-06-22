@@ -4,6 +4,22 @@ import axios from "axios";
 import { useAuth } from "../context/AuthContext";
 import "../Styles/ProjectDetails.css";
 
+const ConfirmModal = ({ open, onClose, onConfirm, message }) => {
+  if (!open) return null;
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="confirm-modal" onClick={e => e.stopPropagation()}>
+        <button className="modal-close-btn" onClick={onClose}>×</button>
+        <div className="confirm-modal-message">{message}</div>
+        <div className="confirm-modal-actions">
+          <button className="btn-outline" onClick={onClose}>Cancel</button>
+          <button className="btn-primary" onClick={onConfirm}>Confirm</button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const baseUrl = import.meta.env.VITE_API_BASE_URL;
 
 const ProjectDetails = ({ type }) => {
@@ -15,6 +31,7 @@ const ProjectDetails = ({ type }) => {
   const [error, setError] = useState(null);
   const [showApplicantsModal, setShowApplicantsModal] = useState(false);
   const [assigning, setAssigning] = useState(false);
+  const [confirming, setConfirming] = useState(false);
   const [selectedApplicant, setSelectedApplicant] = useState("");
   const [showPitchModal, setShowPitchModal] = useState(false);
   const [pitch, setPitch] = useState("");
@@ -22,6 +39,8 @@ const ProjectDetails = ({ type }) => {
   const [successMessage, setSuccessMessage] = useState("");
   const [deleting, setDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showMarkCompleteModal, setShowMarkCompleteModal] = useState(false);
+  const [markingComplete, setMarkingComplete] = useState(false);
 
   useEffect(() => {
     const fetchProject = async () => {
@@ -69,7 +88,7 @@ const ProjectDetails = ({ type }) => {
     } else if (user?.role === "go-worker") {
       navigate("/go");
     } else if (user?.role === "client") {
-      navigate("/your-projects");
+      navigate("/client");
     } else {
       navigate("/");
     }
@@ -100,6 +119,73 @@ const ProjectDetails = ({ type }) => {
       );
     } finally {
       setAssigning(false);
+    }
+  };
+  
+  const handleMarkComplete = async () => {
+    setMarkingComplete(true);
+    try {
+      const endpoint = `${baseUrl}/api/${type}-projects/${project._id}/mark-complete`;
+      const response = await axios.put(
+        endpoint,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+          },
+          withCredentials: true,
+        }
+      );
+      
+      setProject({...project, status: "pending confirmation"});
+      setSuccessMessage("Marked as complete! Waiting for client confirmation.");
+      setTimeout(() => setSuccessMessage(""), 3000);
+      setShowMarkCompleteModal(false);
+    } catch (err) {
+      alert(
+        err.response?.data?.error ||
+          err.response?.data?.message ||
+          "Failed to mark as complete"
+      );
+    } finally {
+      setMarkingComplete(false);
+    }
+  };
+
+  const handleConfirmCompletion = async () => {
+    if (!project?._id) return;
+    
+    const confirmed = window.confirm(
+      "Are you sure you want to mark this project as completed? This action cannot be undone."
+    );
+    
+    if (!confirmed) return;
+    
+    setConfirming(true);
+    try {
+      const endpoint = `${baseUrl}/api/${type}-projects/${project._id}/confirm-completion`;
+      const response = await axios.put(
+        endpoint,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+          },
+          withCredentials: true,
+        }
+      );
+      
+      setProject({...project, status: "completed"});
+      setSuccessMessage("Project marked as completed successfully!");
+      setTimeout(() => setSuccessMessage(""), 2000);
+    } catch (err) {
+      alert(
+        err.response?.data?.error ||
+          err.response?.data?.message ||
+          "Failed to confirm completion"
+      );
+    } finally {
+      setConfirming(false);
     }
   };
 
@@ -159,7 +245,7 @@ const ProjectDetails = ({ type }) => {
       setShowDeleteConfirm(false);
       setSuccessMessage("Project deleted successfully!");
       setTimeout(() => setSuccessMessage(""), 2000);
-      setTimeout(() => navigate("/your-projects"), 2000);
+      setTimeout(() => navigate("/client"), 2000);
     } catch (err) {
       alert(
         err.response?.data?.error ||
@@ -176,12 +262,35 @@ const ProjectDetails = ({ type }) => {
       case "yet to be assigned":
         return "status-pending";
       case "assigned but not completed":
+      case "in-progress":
         return "status-in-progress";
+      case "pending confirmation":
+        return "status-pending-confirmation";  
       case "completed":
         return "status-completed";
       default:
         return "";
     }
+  };
+
+  const isWorkerAssignedToProject = () => {
+    if (!project || !user) return false;
+    return (
+      project.assignedTo && 
+      user._id === (typeof project.assignedTo === 'object' ? project.assignedTo._id : project.assignedTo)
+    );
+  };
+
+  const canMarkComplete = () => {
+    if (!project || !user) return false;
+    
+    const isWorker = user.role === "pro-worker" || user.role === "go-worker";
+    const isAssigned = isWorkerAssignedToProject();
+    const isInCorrectStatus = 
+      project.status === "assigned but not completed" || 
+      project.status === "in-progress";
+      
+    return isWorker && isAssigned && isInCorrectStatus;
   };
 
   if (loading) {
@@ -239,66 +348,127 @@ const ProjectDetails = ({ type }) => {
           <p>{project.description}</p>
         </div>
 
-        <div className="pro-project-details">
-          <div className="detail-section">
-            <h3>Budget</h3>
-            <p>₹{project.budget?.toLocaleString()}</p>
-          </div>
-          <div className="detail-section">
-            <h3>Due Date</h3>
-            <p>{new Date(project.dueDate).toLocaleDateString()}</p>
-          </div>
-          <div className="detail-section">
-            <h3>Applicants</h3>
-            <p>
-              {project.applicants?.length || 0}
-              {user?.role === "client" &&
-                project.applicants &&
-                project.applicants.length > 0 && (
-                  <button
-                    className="view-applicants-btn"
-                    style={{ marginLeft: "10px" }}
-                    onClick={() => setShowApplicantsModal(true)}
-                  >
-                    View Applications
-                  </button>
-                )}
-            </p>
-          </div>
-
-          {user?.role === "client" &&
-            project.status === "yet to be assigned" &&
-            project.applicants?.length > 0 && (
-              <div className="detail-section assign-section">
-                <h3>Assign To</h3>
-                <select
-                  value={selectedApplicant}
-                  onChange={(e) => setSelectedApplicant(e.target.value)}
-                  className="assign-dropdown"
-                >
-                  <option value="">Select applicant</option>
-                  {project.applicants.map((app, idx) => (
-                    <option key={app.user?._id || idx} value={app.user?._id}>
-                      {app.user?.fullName ||
-                        app.user?.email ||
-                        "Unknown User"}
-                    </option>
-                  ))}
-                </select>
-                <button
-                  className={`assign-btn${selectedApplicant && !assigning ? " assign-btn-green" : ""}`}
-                  disabled={!selectedApplicant || assigning}
-                  onClick={handleAssign}
-                  style={{ marginLeft: "10px" }}
-                >
-                  {assigning ? "Assigning..." : "Assign"}
-                </button>
+        {/* Common details section */}
+        <div className={`${type}-project-details`}>
+          {/* Type-specific details */}
+          {type === "pro" ? (
+            <>
+              <div className="detail-section">
+                <h3>Budget</h3>
+                <p>₹{project.budget?.toLocaleString()}</p>
               </div>
-            )}
+              <div className="detail-section">
+                <h3>Due Date</h3>
+                <p>{new Date(project.dueDate).toLocaleDateString()}</p>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="detail-section">
+                <h3>Location</h3>
+                <p>{project.city} {project.subCity ? `, ${project.subCity}` : ''}</p>
+              </div>
+              <div className="detail-section">
+                <h3>Category</h3>
+                <p>{project.category}</p>
+              </div>
+            </>
+          )}
 
-          {user?.role === "pro-worker" &&
-            project.status === "yet to be assigned" &&
-            (myApplication ? (
+          {/* Assigned Worker Section - Show if project is assigned */}
+          {project.assignedTo && (
+            <div className="detail-section assigned-worker-section">
+              <h3>Assigned Worker</h3>
+              <div className="assigned-worker-card">
+                <div className="worker-info">
+                  <h4>{project.assignedTo.fullName || "Worker"}</h4>
+                  <p>{project.assignedTo.email}</p>
+                </div>
+                
+                {/* Action buttons based on role and status */}
+                <div className="worker-actions">
+                  {/* Only client can confirm completion when status is pending confirmation */}
+                  {user?.role === "client" && project.status === "pending confirmation" && (
+                    <button 
+                      className="confirm-completion-btn" 
+                      onClick={handleConfirmCompletion}
+                      disabled={confirming}
+                    >
+                      {confirming ? "Processing..." : "Confirm Completion"}
+                    </button>
+                  )}
+                  
+                  {/* Only assigned worker can mark as complete when in appropriate status */}
+                  {canMarkComplete() && (
+                    <button 
+                      className="mark-complete-btn" 
+                      onClick={() => setShowMarkCompleteModal(true)}
+                    >
+                      Mark as Complete
+                    </button>
+                  )}
+                  
+                  {/* Show status message when pending confirmation */}
+                  {project.status === "pending confirmation" && isWorkerAssignedToProject() && (
+                    <div className="pending-confirmation-message">
+                      Waiting for client to confirm completion
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* PRO project applicants section - Only show if not assigned and if user is a client */}
+          {type === "pro" && !project.assignedTo && user?.role === "client" && (
+            <>
+              <div className="detail-section">
+                <h3>Applicants</h3>
+                <p>
+                  {project.applicants?.length || 0}
+                  {project.applicants && project.applicants.length > 0 && (
+                    <button
+                      className="view-applicants-btn"
+                      style={{ marginLeft: "10px" }}
+                      onClick={() => setShowApplicantsModal(true)}
+                    >
+                      View Applications
+                    </button>
+                  )}
+                </p>
+              </div>
+
+              {project.status === "yet to be assigned" && project.applicants?.length > 0 && (
+                <div className="detail-section assign-section">
+                  <h3>Assign To</h3>
+                  <select
+                    value={selectedApplicant}
+                    onChange={(e) => setSelectedApplicant(e.target.value)}
+                    className="assign-dropdown"
+                  >
+                    <option value="">Select applicant</option>
+                    {project.applicants.map((app, idx) => (
+                      <option key={app.user?._id || idx} value={app.user?._id}>
+                        {app.user?.fullName || app.user?.email || "Unknown User"}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    className={`assign-btn${selectedApplicant && !assigning ? " assign-btn-green" : ""}`}
+                    disabled={!selectedApplicant || assigning}
+                    onClick={handleAssign}
+                    style={{ marginLeft: "10px" }}
+                  >
+                    {assigning ? "Assigning..." : "Assign"}
+                  </button>
+                </div>
+              )}
+            </>
+          )}
+
+          {/* PRO worker show interest section - Only show if not assigned and user is a PRO worker */}
+          {type === "pro" && !project.assignedTo && user?.role === "pro-worker" && project.status === "yet to be assigned" && (
+            myApplication ? (
               <div className="detail-section">
                 <h3>Your Pitch</h3>
                 <blockquote className="your-pitch-blockquote">
@@ -314,7 +484,8 @@ const ProjectDetails = ({ type }) => {
                   Show Interest
                 </button>
               </div>
-            ))}
+            )
+          )}
 
           <div className="detail-section">
             <h3>Posted By</h3>
@@ -344,6 +515,14 @@ const ProjectDetails = ({ type }) => {
           </button>
         </div>
       )}
+
+      {/* Mark Complete Confirmation Modal */}
+      <ConfirmModal
+        open={showMarkCompleteModal}
+        onClose={() => setShowMarkCompleteModal(false)}
+        onConfirm={handleMarkComplete}
+        message="Are you sure you want to mark this project as complete? The client will be asked to confirm completion."
+      />
 
       {showDeleteConfirm && (
         <div className="modal-overlay">

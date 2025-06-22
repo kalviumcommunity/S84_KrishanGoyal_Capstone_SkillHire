@@ -19,13 +19,25 @@ const Client = () => {
     city: "",
     subCity: "",
     category: "",
+    customCategory: "",
     dueDate: "",
     budget: "",
   });
   const [creatingProject, setCreatingProject] = useState(false);
   const [error, setError] = useState(null);
   const [showSuccessAlert, setShowSuccessAlert] = useState(false);
-  const [editingProject, setEditingProject] = useState(null); // <-- NEW
+  const [editingProject, setEditingProject] = useState(null);
+
+  // Predefined categories for GO projects
+  const goCategories = [
+    "Cleaning",
+    "Delivery",
+    "Moving",
+    "Repairs",
+    "Installation",
+    "Gardening",
+    "Other",
+  ];
 
   const baseUrl = import.meta.env.VITE_API_BASE_URL;
 
@@ -38,7 +50,7 @@ const Client = () => {
   useEffect(() => {
     if (!user?._id) return;
 
-    const fetchProjects = async () => { 
+    const fetchProjects = async () => {
       try {
         setLoading(true);
         setError(null);
@@ -110,7 +122,11 @@ const Client = () => {
       if (newProject.type === "go") {
         payload.city = newProject.city;
         payload.subCity = newProject.subCity || "";
-        payload.category = newProject.category;
+        // Use custom category if "Other" is selected
+        payload.category =
+          newProject.category === "Other"
+            ? newProject.customCategory
+            : newProject.category;
       } else {
         payload.dueDate = newProject.dueDate;
         payload.budget = Number(newProject.budget);
@@ -140,6 +156,7 @@ const Client = () => {
         city: "",
         subCity: "",
         category: "",
+        customCategory: "",
         dueDate: "",
         budget: "",
       });
@@ -164,6 +181,8 @@ const Client = () => {
         return "status-pending";
       case "assigned but not completed":
         return "status-in-progress";
+      case "pending confirmation":
+        return "status-pending-confirmation";
       case "completed":
         return "status-completed";
       default:
@@ -224,6 +243,14 @@ const Client = () => {
                 <span className="detail-label">Category:</span>
                 <span>{project.category}</span>
               </div>
+
+              {/* Show assigned worker for GO projects */}
+              {project.assignedTo && (
+                <div className="detail-item assigned-worker">
+                  <span className="detail-label">Assigned to:</span>
+                  <span>{project.assignedTo.fullName || "Go Worker"}</span>
+                </div>
+              )}
             </>
           ) : (
             <>
@@ -239,10 +266,19 @@ const Client = () => {
                     : ""}
                 </span>
               </div>
-              <div className="detail-item">
-                <span className="detail-label">Applicants:</span>
-                <span>{project.applicants?.length || 0}</span>
-              </div>
+              
+              {/* Conditionally show either assigned worker or applicants count */}
+              {project.assignedTo ? (
+                <div className="detail-item assigned-worker">
+                  <span className="detail-label">Assigned to:</span>
+                  <span>{project.assignedTo.fullName || "Pro Worker"}</span>
+                </div>
+              ) : (
+                <div className="detail-item">
+                  <span className="detail-label">Applicants:</span>
+                  <span>{project.applicants?.length || 0}</span>
+                </div>
+              )}
             </>
           )}
         </div>
@@ -258,6 +294,10 @@ const Client = () => {
             <button
               className="edit-btn"
               onClick={() => {
+                const isCustomCategory = !goCategories.includes(
+                  project.category
+                );
+
                 setEditingProject(project);
                 setNewProject({
                   type: project.type,
@@ -265,10 +305,9 @@ const Client = () => {
                   description: project.description,
                   city: project.city || "",
                   subCity: project.subCity || "",
-                  category: project.category || "",
-                  dueDate: project.dueDate
-                    ? project.dueDate.split("T")[0]
-                    : "",
+                  category: isCustomCategory ? "Other" : project.category,
+                  customCategory: isCustomCategory ? project.category : "",
+                  dueDate: project.dueDate ? project.dueDate.split("T")[0] : "",
                   budget: project.budget || "",
                 });
                 setShowCreateModal(true);
@@ -307,9 +346,7 @@ const Client = () => {
                 <button
                   type="button"
                   className={newProject.type === "go" ? "active" : ""}
-                  onClick={() =>
-                    setNewProject({ ...newProject, type: "go" })
-                  }
+                  onClick={() => setNewProject({ ...newProject, type: "go" })}
                   disabled={!!editingProject}
                 >
                   GO Project
@@ -317,9 +354,7 @@ const Client = () => {
                 <button
                   type="button"
                   className={newProject.type === "pro" ? "active" : ""}
-                  onClick={() =>
-                    setNewProject({ ...newProject, type: "pro" })
-                  }
+                  onClick={() => setNewProject({ ...newProject, type: "pro" })}
                   disabled={!!editingProject}
                 >
                   PRO Project
@@ -373,17 +408,45 @@ const Client = () => {
                     }
                   />
                 </div>
+
+                {/* Category Dropdown */}
                 <div className="form-group">
                   <label>Category*</label>
-                  <input
-                    type="text"
+                  <select
                     value={newProject.category}
                     onChange={(e) =>
                       setNewProject({ ...newProject, category: e.target.value })
                     }
                     required
-                  />
+                    className="category-select"
+                  >
+                    <option value="">Select a category</option>
+                    {goCategories.map((category) => (
+                      <option key={category} value={category}>
+                        {category}
+                      </option>
+                    ))}
+                  </select>
                 </div>
+
+                {/* Custom Category Input (shown only when "Other" is selected) */}
+                {newProject.category === "Other" && (
+                  <div className="form-group">
+                    <label>Specify Category*</label>
+                    <input
+                      type="text"
+                      value={newProject.customCategory}
+                      onChange={(e) =>
+                        setNewProject({
+                          ...newProject,
+                          customCategory: e.target.value,
+                        })
+                      }
+                      placeholder="Enter custom category"
+                      required
+                    />
+                  </div>
+                )}
               </>
             ) : (
               <>
@@ -490,6 +553,7 @@ const Client = () => {
                   city: "",
                   subCity: "",
                   category: "",
+                  customCategory: "",
                   dueDate: "",
                   budget: "",
                 });
@@ -522,6 +586,7 @@ const Client = () => {
                     city: "",
                     subCity: "",
                     category: "",
+                    customCategory: "",
                     dueDate: "",
                     budget: "",
                   });

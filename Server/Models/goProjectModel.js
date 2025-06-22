@@ -7,7 +7,7 @@ const goProjectSchema = new Schema({
     description: { type: String, required: true },
     postedBy: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
     assignedTo: { type: Schema.Types.ObjectId, ref: 'User', default: null },
-    status: { type: String, enum: ['yet to be assigned', 'assigned but not completed', 'completed'], default: 'yet to be assigned' },
+    status: { type: String, enum: ['yet to be assigned', 'assigned but not completed', 'pending confirmation', 'completed'], default: 'yet to be assigned' },
     city: { type: String, required: true },
     type:{
         type: String,

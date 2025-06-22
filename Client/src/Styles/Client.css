@@ -469,6 +469,21 @@ html, body, #root {
   margin-right: 0.5rem;
 }
 
+.assigned-worker {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px dashed #e2e8f0;
+}
+
+.assigned-worker .detail-label {
+  color: #4a5568;
+}
+
+.assigned-worker span:last-child {
+  font-weight: 600;
+  color: #2b6cb0;
+}
+
 @keyframes spin {
   to {
     transform: rotate(360deg);

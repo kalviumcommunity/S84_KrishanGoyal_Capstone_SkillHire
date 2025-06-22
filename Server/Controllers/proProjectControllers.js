@@ -309,4 +309,57 @@ const assignProProject = async (req, res) => {
   }
 };
 
-module.exports = { createProProject, updateProProject, deleteProProject, getMyProProjects, getProProject, getAssignedProProjects, getProEarnings, getAllAvailableProProjects, applyToProProject, getAppliedProjects, assignProProject };
+const markProProjectAsComplete = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user._id;
+
+    const project = await ProProject.findById(id);
+    if (!project) {
+      return res.status(404).json({ error: "Project not found" });
+    }
+    if (!project.assignedTo || project.assignedTo.toString() !== userId.toString()) {
+      return res.status(403).json({ error: "You are not assigned to this project" });
+    }
+    if (project.status !== "assigned but not completed" && project.status !== "in-progress") {
+      return res.status(400).json({ error: "Project cannot be marked as complete in its current status" });
+    }
+
+    project.status = "pending confirmation";
+    await project.save();
+
+    res.status(200).json({ message: "Marked as complete, waiting for client confirmation", project });
+  } catch (error) {
+    console.error("Error marking as complete:", error);
+    res.status(500).json({ error: "Server error marking as complete" });
+  }
+};
+
+const confirmProProjectCompletion = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user._id;
+
+    const project = await ProProject.findById(id);
+    if (!project) {
+      return res.status(404).json({ error: "Project not found" });
+    }
+    if (project.postedBy.toString() !== userId.toString()) {
+      return res.status(403).json({ error: "Only the client who posted this project can confirm completion" });
+    }
+    if (project.status !== "pending confirmation") {
+      return res.status(400).json({ error: "Project is not pending confirmation" });
+    }
+
+    project.status = "completed";
+    project.completedAt = new Date();
+    await project.save();
+
+    res.status(200).json({ message: "Project marked as completed", project });
+  } catch (error) {
+    console.error("Error confirming completion:", error);
+    res.status(500).json({ error: "Server error confirming completion" });
+  }
+};
+
+module.exports = { createProProject, updateProProject, deleteProProject, getMyProProjects, getProProject, getAssignedProProjects, getProEarnings, getAllAvailableProProjects, applyToProProject, getAppliedProjects, assignProProject, markProProjectAsComplete, confirmProProjectCompletion };

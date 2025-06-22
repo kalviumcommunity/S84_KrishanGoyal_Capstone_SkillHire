@@ -48,7 +48,7 @@ const signup = async (req, res) => {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'None',
-            maxAge: 60 * 60 * 1000,
+            maxAge: 7 * 24 * 60 * 60 * 1000,
         });
 
         const { password: _, ...userData } = newUser.toObject();
@@ -72,11 +72,9 @@ const completeProfile = async (req, res) => {
         const {
             role,
             goSkills,
-            hourlyRate,
             location,
             proSkills,
-            portfolioUrl,
-            minProjectRate
+            portfolioUrl
         } = req.body;
 
         const user = await User.findById(userId);
@@ -86,13 +84,11 @@ const completeProfile = async (req, res) => {
 
         if (role === 'go-worker') {
             user.goSkills = goSkills;
-            user.hourlyRate = hourlyRate;
             user.location = location;
             user.isAvailable = true;
         } else if (role === 'pro-worker') {
             user.proSkills = proSkills;
             user.portfolioUrl = portfolioUrl;
-            user.minProjectRate = minProjectRate;
         }
 
         user.isProfileComplete = true;
@@ -138,7 +134,7 @@ const login = async (req, res) => {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'None',
-            maxAge: 60 * 60 * 1000,
+            maxAge: 7 * 24 * 60 * 60 * 10000,
         });
 
         const { password: _, ...userData } = user.toObject();
