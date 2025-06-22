@@ -1,12 +1,13 @@
 const express = require('express');
 const connectToDb = require('./Config/db');
-const app = express()
-const cors = require('cors')
+const http = require('http');
+const setupSocketIO = require('./Socket/socketHandler');
+const cors = require('cors');
 const cookieParser = require('cookie-parser');
 
-
+const app = express();
 app.use(cookieParser());
-app.use(express.json())
+app.use(express.json());
 
 app.use(cors({
   origin: function (origin, callback) {
@@ -27,28 +28,31 @@ app.use(cors({
   exposedHeaders: ['set-cookie'],
 }));
 
-
-
-require('dotenv').config()
+require('dotenv').config();
 const port = process.env.PORT || 3000;
-const db = process.env.DB_URI
+const db = process.env.DB_URI;
 
-const goProjectRoutes = require('./Routes/goProjectRoutes')
-const proProjectRoutes = require('./Routes/proProjectRoutes')
+const goProjectRoutes = require('./Routes/goProjectRoutes');
+const proProjectRoutes = require('./Routes/proProjectRoutes');
 const Auth = require('./Routes/authRoutes');
-const allProjects = require('./Routes/allProjects')
+const allProjects = require('./Routes/allProjects');
+const chatRoutes = require('./Routes/chatRoutes');
 
-
-app.use('/api/go-projects', goProjectRoutes)
-app.use('/api/pro-projects', proProjectRoutes)
-app.use('/api/projects', allProjects)
-app.use('/api/auth', Auth)
+app.use('/api/go-projects', goProjectRoutes);
+app.use('/api/pro-projects', proProjectRoutes);
+app.use('/api/projects', allProjects);
+app.use('/api/auth', Auth);
+app.use('/api/chats', chatRoutes);
 
 app.get('/', (req, res) => {
-  res.json('This is Home Route')
-})
+  res.json('This is Home Route');
+});
 
-app.listen(port, async () => {
-  console.log(`Server is running at http://localhost:${port}`)
-  await connectToDb(db)
-})
+const server = http.createServer(app);
+
+const io = setupSocketIO(server);
+
+server.listen(port, async () => {
+  console.log(`Server is running at http://localhost:${port}`);
+  await connectToDb(db);
+});

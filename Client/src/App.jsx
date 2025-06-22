@@ -16,6 +16,8 @@ import ActiveGoProjects from "./Pages/ActiveGoProjects";
 import CompletedTasks from "./Components/CompletedTasks";
 import PendingConfirmation from "./Components/PendingConfirmation";
 import ClosedProjects from "./Components/ClosedProjects";
+import ChatPage from "./Components/Chat/ChatPage";
+import ProtectedRoute from "./Components/ProtectedRoute";
 
 function App() {
   return (
@@ -44,6 +46,22 @@ function App() {
         <Route path="/completed-tasks" element={<CompletedTasks />} />
         <Route path="/pending-confirmation" element={<PendingConfirmation />} />
         <Route path="/closed-projects" element={<ClosedProjects />} />
+        <Route
+          path="/chats"
+          element={
+            <ProtectedRoute>
+              <ChatPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/chats/:chatId"
+          element={
+            <ProtectedRoute>
+              <ChatPage />
+            </ProtectedRoute>
+          }
+        />
       </Routes>
     </>
   );

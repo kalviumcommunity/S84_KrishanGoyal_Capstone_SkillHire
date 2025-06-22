@@ -91,7 +91,6 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    // 👇 Add setUser to the value
     const value = {
         user,
         setUser,

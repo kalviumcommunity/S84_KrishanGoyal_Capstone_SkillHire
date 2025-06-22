@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useChat } from "../context/ChatContext";
 import "../Styles/NavbarDashboards.css";
 
 const NavbarDashboards = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const { unreadCount } = useChat();
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -125,6 +127,17 @@ const NavbarDashboards = () => {
               </div>
             </>
           )}
+
+          {/* Messages link for all user types */}
+          <div
+            className="dashboard-navbar-link"
+            onClick={() => navigate("/chats")}
+          >
+            Messages
+            {unreadCount > 0 && (
+              <span className="notification-badge">{unreadCount}</span>
+            )}
+          </div>
 
           <div className="dashboard-profile-container" ref={dropdownRef}>
             <button

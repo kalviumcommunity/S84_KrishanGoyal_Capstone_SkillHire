@@ -27,7 +27,6 @@ const PendingConfirmation = () => {
       setLoading(true);
       setError(null);
 
-      // Fetch all projects with 'pending confirmation' status
       const response = await axios.get(
         `${baseUrl}/api/projects/pending-confirmation/${user._id}`,
         {
@@ -73,13 +72,11 @@ const PendingConfirmation = () => {
         }
       );
 
-      // Update UI
       setProjects(projects.filter(project => project._id !== projectToConfirm));
       
       setSuccessMessage("Project marked as completed successfully!");
       setTimeout(() => setSuccessMessage(""), 3000);
       
-      // Close modal
       setShowConfirmModal(false);
       setProjectToConfirm(null);
       setProjectType(null);

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useAuth } from "../context/AuthContext";
+import ChatButton from "./Chat/ChatButton";
 import "../Styles/ProjectDetails.css";
 
 const ConfirmModal = ({ open, onClose, onConfirm, message }) => {
@@ -348,9 +349,7 @@ const ProjectDetails = ({ type }) => {
           <p>{project.description}</p>
         </div>
 
-        {/* Common details section */}
         <div className={`${type}-project-details`}>
-          {/* Type-specific details */}
           {type === "pro" ? (
             <>
               <div className="detail-section">
@@ -375,7 +374,6 @@ const ProjectDetails = ({ type }) => {
             </>
           )}
 
-          {/* Assigned Worker Section - Show if project is assigned */}
           {project.assignedTo && (
             <div className="detail-section assigned-worker-section">
               <h3>Assigned Worker</h3>
@@ -385,9 +383,7 @@ const ProjectDetails = ({ type }) => {
                   <p>{project.assignedTo.email}</p>
                 </div>
                 
-                {/* Action buttons based on role and status */}
                 <div className="worker-actions">
-                  {/* Only client can confirm completion when status is pending confirmation */}
                   {user?.role === "client" && project.status === "pending confirmation" && (
                     <button 
                       className="confirm-completion-btn" 
@@ -398,7 +394,6 @@ const ProjectDetails = ({ type }) => {
                     </button>
                   )}
                   
-                  {/* Only assigned worker can mark as complete when in appropriate status */}
                   {canMarkComplete() && (
                     <button 
                       className="mark-complete-btn" 
@@ -408,18 +403,25 @@ const ProjectDetails = ({ type }) => {
                     </button>
                   )}
                   
-                  {/* Show status message when pending confirmation */}
                   {project.status === "pending confirmation" && isWorkerAssignedToProject() && (
                     <div className="pending-confirmation-message">
                       Waiting for client to confirm completion
                     </div>
+                  )}
+
+                  {user?.role === "client" && project.assignedTo && (
+                    <ChatButton
+                      projectId={project._id}
+                      projectType={type === "pro" ? "ProProject" : "GoProject"}
+                      workerId={project.assignedTo._id}
+                      workerName={project.assignedTo.fullName || "Worker"}
+                    />
                   )}
                 </div>
               </div>
             </div>
           )}
 
-          {/* PRO project applicants section - Only show if not assigned and if user is a client */}
           {type === "pro" && !project.assignedTo && user?.role === "client" && (
             <>
               <div className="detail-section">
@@ -466,7 +468,6 @@ const ProjectDetails = ({ type }) => {
             </>
           )}
 
-          {/* PRO worker show interest section - Only show if not assigned and user is a PRO worker */}
           {type === "pro" && !project.assignedTo && user?.role === "pro-worker" && project.status === "yet to be assigned" && (
             myApplication ? (
               <div className="detail-section">
@@ -516,7 +517,6 @@ const ProjectDetails = ({ type }) => {
         </div>
       )}
 
-      {/* Mark Complete Confirmation Modal */}
       <ConfirmModal
         open={showMarkCompleteModal}
         onClose={() => setShowMarkCompleteModal(false)}
@@ -566,16 +566,12 @@ const ProjectDetails = ({ type }) => {
                     <span className="applicant-name">
                       {app.user?.fullName || app.user?.email || "Unknown User"}
                     </span>
-                    <button
-                      className="contact-btn"
-                      onClick={() => {
-                        alert(
-                          `Start chat with ${app.user?.fullName || app.user?.email}`
-                        );
-                      }}
-                    >
-                      Contact
-                    </button>
+                    <ChatButton 
+                      projectId={project._id}
+                      projectType="ProProject"
+                      workerId={app.user?._id}
+                      workerName={app.user?.fullName || "Applicant"}
+                    />
                   </div>
                   <div className="applicant-pitch">
                     <span>Pitch:</span>
