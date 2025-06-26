@@ -22,7 +22,6 @@ const CompletedTasks = () => {
       setLoading(true);
       setError(null);
 
-      // Fetch projects that are either completed or pending confirmation
       const response = await axios.get(
         `${baseUrl}/api/go-projects/completed/${user._id}`,
         {

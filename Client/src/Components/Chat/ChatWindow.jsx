@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useChat } from '../../context/ChatContext';
 import { useAuth } from '../../context/AuthContext';
 import { getProfileImageUrl } from '../../utils/imageHelper';
+import PaymentNegotiationModal from '../PaymentNegotitationModal';
+import axios from 'axios';
 import '../../Styles/Chat/ChatWindow.css';
 
 const ChatWindow = () => {
@@ -9,12 +11,74 @@ const ChatWindow = () => {
   const { user } = useAuth();
   const [newMessage, setNewMessage] = useState('');
   const messagesEndRef = useRef(null);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [projectDetails, setProjectDetails] = useState(null);
+  const baseUrl = import.meta.env.VITE_API_BASE_URL;
 
   useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages]);
+
+  useEffect(() => {
+    if (activeChat) {
+      fetchProjectDetails();
+    }
+  }, [activeChat]);
+
+  const fetchProjectDetails = async () => {
+    if (!activeChat) return;
+    
+    try {
+      const projectType = activeChat.projectType === 'ProProject' ? 'pro' : 'go';
+      const response = await axios.get(
+        `${baseUrl}/api/${projectType}-projects/${activeChat.projectId._id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+          },
+          withCredentials: true,
+        }
+      );
+      
+      setProjectDetails(response.data.project);
+    } catch {
+      // 
+    }
+  };
+
+  const handleSubmitPayment = async ({ amount, notes }) => {
+    try {
+      const projectType = activeChat.projectType === 'ProProject' ? 'pro' : 'go';
+      const endpoint = `${baseUrl}/api/${projectType}-projects/${activeChat.projectId._id}/set-payment`;
+      
+      await axios.put(
+        endpoint,
+        { amount, notes },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+          },
+          withCredentials: true,
+        }
+      );
+      
+      setShowPaymentModal(false);
+      
+      const isClient = user._id === activeChat.client._id;
+      const messageText = isClient 
+        ? `Final payment amount set: ₹${amount}${notes ? ` - Note: ${notes}` : ''}`
+        : `Payment amount proposed: ₹${amount}${notes ? ` - Note: ${notes}` : ''}`;
+        
+      sendMessage(messageText);
+      
+      fetchProjectDetails();
+      
+    } catch {
+      // 
+    }
+  };
 
   if (!activeChat) {
     return (
@@ -94,6 +158,11 @@ const ChatWindow = () => {
   const otherParticipant = getOtherParticipant();
   const messageGroups = groupMessagesByDate();
   const profileImageUrl = getProfileImageUrl(otherParticipant.profileImageUrl);
+  const isClient = user?._id === activeChat.client._id;
+  
+  const canNegotiatePayment = projectDetails && 
+    (projectDetails.status === 'in-progress' || 
+     projectDetails.status === 'assigned but not completed');
 
   return (
     <div className="chat-window-container">
@@ -129,6 +198,23 @@ const ChatWindow = () => {
             </span>
           </div>
         </div>
+        
+        {canNegotiatePayment && (
+          <div className="chat-header-actions">
+            {projectDetails?.payment ? (
+              <div className="payment-info">
+                <span>Payment: ₹{projectDetails.payment.toLocaleString()}</span>
+              </div>
+            ) : (
+              <button
+                onClick={() => setShowPaymentModal(true)}
+                className="set-payment-btn"
+              >
+                {isClient ? 'Set Payment' : 'Propose Payment'}
+              </button>
+            )}
+          </div>
+        )}
       </div>
       
       <div className="chat-messages">
@@ -182,6 +268,15 @@ const ChatWindow = () => {
           Send
         </button>
       </form>
+      
+      <PaymentNegotiationModal
+        open={showPaymentModal}
+        onClose={() => setShowPaymentModal(false)}
+        onSubmit={handleSubmitPayment}
+        initialAmount={projectDetails?.payment || ''}
+        projectType={activeChat?.projectType}
+        isClient={isClient}
+      />
     </div>
   );
 };

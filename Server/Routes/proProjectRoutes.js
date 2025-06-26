@@ -1,6 +1,6 @@
 const express = require('express')
 const router = express.Router()
-const {createProProject, updateProProject, deleteProProject, getMyProProjects, getProProject, getAssignedProProjects, getProEarnings, getAllAvailableProProjects, applyToProProject, getAppliedProjects, assignProProject, markProProjectAsComplete, confirmProProjectCompletion}  = require('../Controllers/proProjectControllers')
+const {createProProject, updateProProject, deleteProProject, getMyProProjects, getProProject, getAssignedProProjects, getProEarnings, getAllAvailableProProjects, applyToProProject, getAppliedProjects, assignProProject, markProProjectAsComplete, confirmProProjectCompletion, setProProjectPayment}  = require('../Controllers/proProjectControllers')
 const verifyToken = require('../Middlewares/authMiddleware')
 
 router.post('/add', verifyToken, createProProject)
@@ -16,5 +16,6 @@ router.post('/:projectId/apply', verifyToken, applyToProProject)
 router.post('/:projectId/assign', verifyToken, assignProProject)
 router.put('/:id/mark-complete', verifyToken, markProProjectAsComplete);
 router.put('/:id/confirm-completion', verifyToken, confirmProProjectCompletion);
+router.put('/:id/set-payment', verifyToken, setProProjectPayment);
 
 module.exports = router

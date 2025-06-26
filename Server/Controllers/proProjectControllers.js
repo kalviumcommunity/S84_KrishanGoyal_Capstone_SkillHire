@@ -362,4 +362,71 @@ const confirmProProjectCompletion = async (req, res) => {
   }
 };
 
-module.exports = { createProProject, updateProProject, deleteProProject, getMyProProjects, getProProject, getAssignedProProjects, getProEarnings, getAllAvailableProProjects, applyToProProject, getAppliedProjects, assignProProject, markProProjectAsComplete, confirmProProjectCompletion };
+const setProProjectPayment = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { amount, notes } = req.body;
+    const userId = req.user._id;
+
+    if (!amount || isNaN(amount) || amount <= 0) {
+      return res.status(400).json({ error: "Invalid payment amount" });
+    }
+
+    const project = await ProProject.findById(id);
+    if (!project) {
+      return res.status(404).json({ error: "Project not found" });
+    }
+
+    // Check if user is authorized (client or assigned worker)
+    const isClient = project.postedBy.toString() === userId.toString();
+    const isWorker = project.assignedTo && project.assignedTo.toString() === userId.toString();
+    
+    if (!isClient && !isWorker) {
+      return res.status(403).json({ error: "Not authorized to set payment for this project" });
+    }
+
+    // If client sets payment, it's final - if worker sets, it's a proposal
+    if (isClient) {
+      project.budget = amount;
+      project.paymentNotes = notes || '';
+      project.paymentStatus = 'confirmed';
+    } else {
+      project.proposedBudget = amount;
+      project.paymentNotes = notes || '';
+      project.paymentStatus = 'proposed';
+    }
+    
+    await project.save();
+    
+    // Populate fields for response
+    const populatedProject = await ProProject.findById(id)
+      .populate('postedBy', 'fullName email')
+      .populate('assignedTo', 'fullName email');
+
+    res.status(200).json({ 
+      message: isClient ? "Payment set successfully" : "Payment proposal submitted",
+      project: populatedProject 
+    });
+    
+  } catch (error) {
+    console.error('Error setting project payment:', error);
+    res.status(500).json({ error: "Server error setting payment" });
+  }
+};
+
+module.exports = { 
+  createProProject, 
+  updateProProject, 
+  deleteProProject, 
+  getMyProProjects, 
+  getProProject, 
+  getAssignedProProjects, 
+  getProEarnings, 
+  getAllAvailableProProjects, 
+  applyToProProject, 
+  getAppliedProjects, 
+  assignProProject, 
+  markProProjectAsComplete, 
+  confirmProProjectCompletion ,
+  setProProjectPayment
+};

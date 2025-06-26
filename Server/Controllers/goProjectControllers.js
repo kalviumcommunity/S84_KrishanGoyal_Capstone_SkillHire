@@ -1,4 +1,6 @@
 const GoProject = require('../Models/goProjectModel');
+const Chat = require('../Models/chatModel');
+const User = require('../Models/userModel');
 
 
 const createGoProject = async (req, res) => {
@@ -112,8 +114,8 @@ const getGoProjectsByUser = async (req, res) => {
 const getGoProject = async (req, res) => {
   try {
     const project = await GoProject.findById(req.params.projectId)
-      .populate('postedBy', 'name email')
-      .populate('assignedTo', 'name email');
+      .populate('postedBy', 'fullName email')
+      .populate('assignedTo', 'fullName email');
 
     if (!project) {
       return res.status(404).json({ error: 'GO Project not found' });
@@ -129,29 +131,49 @@ const acceptGoProject = async (req, res) => {
   try {
     const { id: jobId } = req.params;
     const userId = req.user._id;
-    
+
     const project = await GoProject.findById(jobId);
     if (!project) {
       return res.status(404).json({ error: "Project not found" });
     }
-    
+
     if (project.status !== "yet to be assigned") {
       return res.status(400).json({ error: "Project is already assigned" });
     }
-    
+
     // Assign the project to the current user
     project.assignedTo = userId;
     project.status = "assigned but not completed";
     await project.save();
-    
-    // Return populated project for better frontend display
+
+    // Create chat if not exists
+    let chat = await Chat.findOne({
+      projectId: project._id,
+      projectType: 'GoProject',
+      client: project.postedBy,
+      worker: userId
+    });
+
+    if (!chat) {
+      chat = new Chat({
+        projectId: project._id,
+        projectType: 'GoProject',
+        client: project.postedBy,
+        worker: userId,
+        initiatedBy: project.postedBy
+      });
+      await chat.save();
+    }
+
+    // Return populated project and chat id for frontend
     const populatedProject = await GoProject.findById(jobId)
       .populate('assignedTo', 'fullName email')
       .populate('postedBy', 'fullName email');
-    
-    res.status(200).json({ 
+
+    res.status(200).json({
       message: "Project accepted successfully",
-      project: populatedProject
+      project: populatedProject,
+      chatId: chat._id
     });
   } catch (error) {
     console.error('Error accepting project:', error);
@@ -304,6 +326,58 @@ const getGoWorkerCompletedTasks = async (req, res) => {
   }
 };
 
+const setGoProjectPayment = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { amount, notes } = req.body;
+    const userId = req.user._id;
+
+    if (!amount || isNaN(amount) || amount <= 0) {
+      return res.status(400).json({ error: "Invalid payment amount" });
+    }
+
+    const project = await GoProject.findById(id);
+    if (!project) {
+      return res.status(404).json({ error: "Project not found" });
+    }
+
+    // Check if user is authorized (client or assigned worker)
+    const isClient = project.postedBy.toString() === userId.toString();
+    const isWorker = project.assignedTo && project.assignedTo.toString() === userId.toString();
+    
+    if (!isClient && !isWorker) {
+      return res.status(403).json({ error: "Not authorized to set payment for this project" });
+    }
+
+    // If client sets payment, it's final - if worker sets, it's a proposal
+    if (isClient) {
+      project.payment = amount;
+      project.paymentNotes = notes || '';
+      project.paymentStatus = 'confirmed';
+    } else {
+      project.proposedPayment = amount;
+      project.paymentNotes = notes || '';
+      project.paymentStatus = 'proposed';
+    }
+    
+    await project.save();
+    
+    // Populate fields for response
+    const populatedProject = await GoProject.findById(id)
+      .populate('postedBy', 'fullName email')
+      .populate('assignedTo', 'fullName email');
+
+    res.status(200).json({ 
+      message: isClient ? "Payment set successfully" : "Payment proposal submitted",
+      project: populatedProject 
+    });
+    
+  } catch (error) {
+    console.error('Error setting project payment:', error);
+    res.status(500).json({ error: "Server error setting payment" });
+  }
+};
+
 module.exports = { 
   createGoProject, 
   updateGoProject, 
@@ -316,4 +390,6 @@ module.exports = {
   getActiveGoProjects, 
   markGoProjectAsComplete, 
   confirmGoProjectCompletion, 
-  getGoWorkerCompletedTasks };
+  getGoWorkerCompletedTasks,
+  setGoProjectPayment
+};

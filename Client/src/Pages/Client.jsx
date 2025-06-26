@@ -28,7 +28,6 @@ const Client = () => {
   const [showSuccessAlert, setShowSuccessAlert] = useState(false);
   const [editingProject, setEditingProject] = useState(null);
 
-  // Predefined categories for GO projects
   const goCategories = [
     "Cleaning",
     "Delivery",
@@ -58,7 +57,7 @@ const Client = () => {
         let endpoint;
         switch (projectType) {
           case "go":
-            endpoint = `${baseUrl}/api/go-projects/${user._id}`;
+            endpoint = `${baseUrl}/api/go-projects/user/${user._id}`;
             break;
           case "pro":
             endpoint = `${baseUrl}/api/pro-projects/my/${user._id}`;
@@ -89,7 +88,6 @@ const Client = () => {
     fetchProjects();
   }, [projectType, baseUrl, user?._id]);
 
-  // Unified handler for create and edit
   const handleCreateOrEditProject = async (e) => {
     e.preventDefault();
     setCreatingProject(true);
@@ -98,14 +96,12 @@ const Client = () => {
     try {
       let endpoint, method;
       if (editingProject) {
-        // Editing
         endpoint =
           newProject.type === "go"
             ? `${baseUrl}/api/go-projects/${editingProject._id}`
             : `${baseUrl}/api/pro-projects/${editingProject._id}`;
         method = "put";
       } else {
-        // Creating
         endpoint =
           newProject.type === "go"
             ? `${baseUrl}/api/go-projects/add`
@@ -122,7 +118,6 @@ const Client = () => {
       if (newProject.type === "go") {
         payload.city = newProject.city;
         payload.subCity = newProject.subCity || "";
-        // Use custom category if "Other" is selected
         payload.category =
           newProject.category === "Other"
             ? newProject.customCategory

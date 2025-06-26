@@ -8,13 +8,29 @@ const goProjectSchema = new Schema({
     postedBy: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
     assignedTo: { type: Schema.Types.ObjectId, ref: 'User', default: null },
     status: { type: String, enum: ['yet to be assigned', 'assigned but not completed', 'pending confirmation', 'completed'], default: 'yet to be assigned' },
+    completedAt:{type: Date},
+    paidAt:{type: Date},
     city: { type: String, required: true },
-    type:{
+    type: {
         type: String,
         default: 'go'
     },
     subCity: { type: String },
-    category: { type: String, required: true }
+    category: { type: String, required: true },
+    payment: {
+        type: Number
+    },
+    proposedPayment: {
+        type: Number
+    },
+    paymentNotes: {
+        type: String
+    },
+    paymentStatus: {
+        type: String,
+        enum: ['none', 'proposed', 'confirmed'],
+        default: 'none'
+    }
 }, {
     timestamps: true,
     toJSON: {

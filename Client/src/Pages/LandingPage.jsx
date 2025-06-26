@@ -71,7 +71,7 @@ const LandingPage = () => {
         <div className="curtain-overlay"></div>
         <Navbar className="landing-content landing-nav" />
         
-        {sections.map(({ id, Component, className }, index) => (
+        {sections.map(({ id,className }, index) => (
           <section
             key={id}
             id={id}

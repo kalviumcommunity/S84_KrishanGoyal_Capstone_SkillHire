@@ -295,6 +295,49 @@
   overflow: hidden;
 }
 
+/* Add these to your existing CSS file */
+
+.chat-header-actions {
+  display: flex;
+  align-items: center;
+}
+
+.payment-info {
+  background-color: #e3f2fd;
+  color: #0366d6;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.set-payment-btn {
+  background-color: #0366d6;
+  color: white;
+  border: none;
+  border-radius: 20px;
+  padding: 6px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.set-payment-btn:hover {
+  background-color: #0255b3;
+}
+
+/* System messages for payments */
+.message-bubble.system {
+  background-color: #f0f4f8;
+  color: #555;
+  text-align: center;
+  border: 1px solid #e1e4e8;
+  max-width: 85%;
+  margin: 8px auto;
+  font-style: italic;
+}
+
 @media (max-width: 768px) {
   .message-bubble {
     max-width: 85%;

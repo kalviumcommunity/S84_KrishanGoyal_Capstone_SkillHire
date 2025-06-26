@@ -3,7 +3,6 @@ import axios from "axios";
 import { useAuth } from "../context/AuthContext";
 import NavbarDashboards from "../Components/NavbarDashboards";
 import "../Styles/GoDashboard.css";
-import { useNavigate } from "react-router-dom";
 
 const ConfirmModal = ({ open, onClose, onConfirm, message }) => {
   if (!open) return null;
@@ -29,7 +28,6 @@ const ConfirmModal = ({ open, onClose, onConfirm, message }) => {
 
 export default function GoDashboard() {
   const { user } = useAuth();
-  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("jobs");
   const [jobs, setJobs] = useState([]);
   const [availableJobs, setAvailableJobs] = useState([]);
@@ -66,7 +64,6 @@ export default function GoDashboard() {
 
     try {
       setLoading(true);
-      // Get jobs ASSIGNED to this worker (not jobs they posted)
       const jobsRes = await axios.get(
         `${baseUrl}/api/go-projects/assigned/${user._id}`,
         {
@@ -77,8 +74,6 @@ export default function GoDashboard() {
         }
       );
       setJobs(jobsRes.data.projects || []);
-      // For earnings, we'll use the available data or create a placeholder
-      // Since there's no specific earnings endpoint for go-workers in the routes
       const completedJobs =
         jobsRes.data.projects?.filter((job) => job.status === "completed") ||
         [];
@@ -97,7 +92,6 @@ export default function GoDashboard() {
 
       setEarnings(earnings);
 
-      // Create recent transactions from completed jobs
       const recentTransactions = completedJobs
         .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
         .slice(0, 5)
@@ -119,7 +113,6 @@ export default function GoDashboard() {
     try {
       setAvailableLoading(true);
 
-      // Fetch all available go-projects (those not assigned)
       const response = await axios.get(`${baseUrl}/api/go-projects/available`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("authToken")}`,
@@ -162,7 +155,6 @@ export default function GoDashboard() {
       );
 
       if (response.data.project) {
-        // Refresh available jobs and user's jobs
         fetchAvailableJobs();
         fetchUserData();
         alert("Project accepted successfully!");
@@ -175,7 +167,6 @@ export default function GoDashboard() {
     }
   };
 
-  // Modal-based mark complete
   const handleMarkCompleteClick = (jobId) => {
     setJobToMark(jobId);
     setShowConfirmModal(true);
@@ -184,7 +175,6 @@ export default function GoDashboard() {
 const handleConfirmMarkComplete = async () => {
     if (!jobToMark) return;
     try {
-      // Update: Fix incorrect endpoint - change to /mark-complete
       await axios.put(
         `${baseUrl}/api/go-projects/${jobToMark}/mark-complete`,
         {},
@@ -196,7 +186,6 @@ const handleConfirmMarkComplete = async () => {
         }
       );
 
-      // Update UI instantly
       setJobs(
         jobs.map((job) =>
           job._id === jobToMark ? { ...job, status: "pending confirmation" } : job

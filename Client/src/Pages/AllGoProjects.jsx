@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
-import { useAuth } from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 import NavbarDashboards from "../Components/NavbarDashboards";
 import "../Styles/AllGoProjects.css";
 
 const AllGoProjects = () => {
-  const { user } = useAuth();
+  const navigate = useNavigate();
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -77,12 +77,13 @@ const AllGoProjects = () => {
         }
       );
 
-      if (response.data.project) {
-        setProjects(projects.filter((project) => project._id !== jobId));
+      if (response.data.chatId) {
+        navigate(`/chats/${response.data.chatId}`);
+      } else {
         alert("Project accepted successfully!");
+        fetchProjects();
       }
     } catch (error) {
-      console.error("Error accepting job:", error);
       alert(
         error.response?.data?.error ||
           "Failed to accept project. Please try again."
@@ -222,8 +223,7 @@ const AllGoProjects = () => {
         )}
       </div>
 
-      {/* Details Modal */}
-  {showDetailsModal && selectedProject && (
+      {showDetailsModal && selectedProject && (
         <div className="modal-overlay" onClick={closeDetailsModal}>
           <div className="job-details-modal" onClick={e => e.stopPropagation()}>
             <button className="modal-close-btn" onClick={closeDetailsModal}>×</button>

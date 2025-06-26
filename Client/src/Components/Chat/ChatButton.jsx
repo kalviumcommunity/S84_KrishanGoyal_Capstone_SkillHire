@@ -11,8 +11,8 @@ const ChatButton = ({ projectId, projectType, workerId, workerName }) => {
     try {
       const chat = await initializeChat(projectId, projectType, workerId);
       navigate(`/chats/${chat._id}`);
-    } catch (error) {
-      console.error('Failed to start chat:', error);
+    } catch {
+      // 
     }
   };
 

@@ -17,6 +17,7 @@ import CompletedTasks from "./Components/CompletedTasks";
 import PendingConfirmation from "./Components/PendingConfirmation";
 import ClosedProjects from "./Components/ClosedProjects";
 import ChatPage from "./Components/Chat/ChatPage";
+import PaymentSuccess from "./Pages/PaymentSuccess";
 import ProtectedRoute from "./Components/ProtectedRoute";
 
 function App() {
@@ -59,6 +60,14 @@ function App() {
           element={
             <ProtectedRoute>
               <ChatPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/payment-success/:paymentId"
+          element={
+            <ProtectedRoute>
+              <PaymentSuccess />
             </ProtectedRoute>
           }
         />

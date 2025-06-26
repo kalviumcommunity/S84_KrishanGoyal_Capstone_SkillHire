@@ -41,7 +41,7 @@ const ProjectDetails = ({ type }) => {
   const [deleting, setDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showMarkCompleteModal, setShowMarkCompleteModal] = useState(false);
-  const [markingComplete, setMarkingComplete] = useState(false);
+  const [setMarkingComplete] = useState(false);
 
   useEffect(() => {
     const fetchProject = async () => {
@@ -127,7 +127,7 @@ const ProjectDetails = ({ type }) => {
     setMarkingComplete(true);
     try {
       const endpoint = `${baseUrl}/api/${type}-projects/${project._id}/mark-complete`;
-      const response = await axios.put(
+      await axios.put(
         endpoint,
         {},
         {
@@ -165,7 +165,7 @@ const ProjectDetails = ({ type }) => {
     setConfirming(true);
     try {
       const endpoint = `${baseUrl}/api/${type}-projects/${project._id}/confirm-completion`;
-      const response = await axios.put(
+      await axios.put(
         endpoint,
         {},
         {

@@ -26,19 +26,16 @@ const ChatList = ({ onSelectChat }) => {
     const messageDate = new Date(timestamp);
     const today = new Date();
     
-    // If message is from today, return time
     if (messageDate.toDateString() === today.toDateString()) {
       return messageDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     }
     
-    // If message is from yesterday
     const yesterday = new Date(today);
     yesterday.setDate(today.getDate() - 1);
     if (messageDate.toDateString() === yesterday.toDateString()) {
       return 'Yesterday';
     }
     
-    // Otherwise return date
     return messageDate.toLocaleDateString();
   };
 

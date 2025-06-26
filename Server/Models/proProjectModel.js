@@ -17,7 +17,16 @@ const proProjectSchema = new Schema({
     postedBy: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
     assignedTo: { type: Schema.Types.ObjectId, ref: 'User', default: null },
     status: { type: String, enum: ['yet to be assigned', 'assigned but not completed', 'pending confirmation', 'completed'], default: 'yet to be assigned' },
+    completedAt:{type: Date},
+    paidAt:{type: Date},
     budget: { type: Number, required: true },
+    proposedBudget: { type: Number },
+    paymentNotes: { type: String },
+    paymentStatus: {
+        type: String,
+        enum: ['none', 'proposed', 'confirmed'],
+        default: 'none'
+    },
     applicants: [
         {
             user: { type: Schema.Types.ObjectId, ref: 'User' },

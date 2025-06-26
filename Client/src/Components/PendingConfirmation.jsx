@@ -4,6 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import NavbarDashboards from "../Components/NavbarDashboards";
 import "../Styles/PendingConfirmation.css";
 import ConfirmModal from "../Components/ConfirmModal";
+import PaymentProcessor from "../Components/PaymentProcessor";
 
 const PendingConfirmation = () => {
   const { user } = useAuth();
@@ -12,6 +13,7 @@ const PendingConfirmation = () => {
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState("");
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [projectToConfirm, setProjectToConfirm] = useState(null);
   const [projectType, setProjectType] = useState(null);
   const baseUrl = import.meta.env.VITE_API_BASE_URL;
@@ -39,7 +41,6 @@ const PendingConfirmation = () => {
 
       setProjects(response.data.projects || []);
     } catch (error) {
-      console.error("Error fetching pending projects:", error);
       setError(
         error.response?.data?.message ||
           "Failed to load pending projects. Please try again."
@@ -59,30 +60,11 @@ const PendingConfirmation = () => {
     if (!projectToConfirm || !projectType) return;
 
     try {
-      const endpoint = `${baseUrl}/api/${projectType}-projects/${projectToConfirm}/confirm-completion`;
-      
-      await axios.put(
-        endpoint,
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
-          },
-          withCredentials: true,
-        }
-      );
-
-      setProjects(projects.filter(project => project._id !== projectToConfirm));
-      
-      setSuccessMessage("Project marked as completed successfully!");
-      setTimeout(() => setSuccessMessage(""), 3000);
-      
+      // Instead of directly confirming, start the payment process
       setShowConfirmModal(false);
-      setProjectToConfirm(null);
-      setProjectType(null);
-    } catch (error) {
-      console.error("Error confirming project completion:", error);
-      alert("Failed to confirm project completion. Please try again.");
+      setShowPaymentModal(true);
+    } catch {
+      alert("Failed to process payment. Please try again.");
       setShowConfirmModal(false);
       setProjectToConfirm(null);
       setProjectType(null);
@@ -122,7 +104,9 @@ const PendingConfirmation = () => {
               <div key={project._id} className="project-card">
                 <div className="project-header">
                   <h3>{project.title}</h3>
-                  <span className="project-type-badge">{project.type.toUpperCase()}</span>
+                  <span className="project-type-badge">
+                    {project.type.toUpperCase()}
+                  </span>
                 </div>
 
                 <p className="project-description">{project.description}</p>
@@ -140,6 +124,12 @@ const PendingConfirmation = () => {
                       <div className="detail-item">
                         <span className="detail-label">Category:</span>
                         <span>{project.category}</span>
+                      </div>
+                      <div className="detail-item">
+                        <span className="detail-label">Payment:</span>
+                        <span>
+                          ₹{project.payment?.toLocaleString() || "TBD"}
+                        </span>
                       </div>
                     </>
                   ) : (
@@ -168,15 +158,19 @@ const PendingConfirmation = () => {
                 <div className="project-actions">
                   <button
                     className="action-button view-details"
-                    onClick={() => viewProjectDetails(project._id, project.type)}
+                    onClick={() =>
+                      viewProjectDetails(project._id, project.type)
+                    }
                   >
                     View Details
                   </button>
                   <button
                     className="action-button confirm-button"
-                    onClick={() => handleConfirmClick(project._id, project.type)}
+                    onClick={() =>
+                      handleConfirmClick(project._id, project.type)
+                    }
                   >
-                    Confirm Completion
+                    Confirm & Pay
                   </button>
                 </div>
               </div>
@@ -189,6 +183,7 @@ const PendingConfirmation = () => {
         )}
       </div>
 
+      {/* Confirmation Modal */}
       <ConfirmModal
         open={showConfirmModal}
         onClose={() => {
@@ -197,8 +192,44 @@ const PendingConfirmation = () => {
           setProjectType(null);
         }}
         onConfirm={handleConfirmCompletion}
-        message="Are you sure you want to mark this project as completed? This action cannot be undone."
+        message="Are you sure you want to confirm this project completion? You will proceed to payment after confirmation."
       />
+
+      {/* Payment Modal */}
+      {/* Payment Modal */}
+      {showPaymentModal && (
+        <PaymentProcessor
+          projectId={projectToConfirm}
+          projectType={projectType}
+          onClose={() => {
+            setShowPaymentModal(false);
+            setProjectToConfirm(null);
+            setProjectType(null);
+          }}
+          onSuccess={() => {
+            // console.log("Payment successful:", paymentData);
+            setSuccessMessage('Payment successful')
+
+            setProjects(
+              projects.filter((project) => project._id !== projectToConfirm)
+            );
+
+            setSuccessMessage(
+              "Project marked as completed and payment processed successfully!"
+            );
+            setTimeout(() => setSuccessMessage(""), 5000);
+
+            setShowPaymentModal(false);
+            setProjectToConfirm(null);
+            setProjectType(null);
+
+            // Force refresh data from server to ensure latest status
+            setTimeout(() => {
+              fetchPendingProjects();
+            }, 2000);
+          }}
+        />
+      )}
     </div>
   );
 };

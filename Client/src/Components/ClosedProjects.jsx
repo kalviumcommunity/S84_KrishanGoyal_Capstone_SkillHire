@@ -9,6 +9,8 @@ const ClosedProjects = () => {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedProject, setSelectedProject] = useState(null);
+  const [showPaymentDetails, setShowPaymentDetails] = useState(false);
   const baseUrl = import.meta.env.VITE_API_BASE_URL;
 
   useEffect(() => {
@@ -33,7 +35,32 @@ const ClosedProjects = () => {
         }
       );
 
-      setProjects(response.data.projects || []);
+      // Fetch payment details for each project
+      const projectsWithPayments = await Promise.all(
+        (response.data.projects || []).map(async (project) => {
+          try {
+            const paymentResponse = await axios.get(
+              `${baseUrl}/api/payments/project/${project.type}/${project._id}`,
+              {
+                headers: {
+                  Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+                },
+                withCredentials: true,
+              }
+            );
+            
+            return {
+              ...project,
+              paymentDetails: paymentResponse.data.payment || null
+            };
+          } catch (err) {
+            console.error(`Error fetching payment for project ${project._id}:`, err);
+            return project;
+          }
+        })
+      );
+
+      setProjects(projectsWithPayments);
     } catch (error) {
       console.error("Error fetching closed projects:", error);
       setError(
@@ -47,6 +74,16 @@ const ClosedProjects = () => {
 
   const viewProjectDetails = (projectId, type) => {
     window.location.href = `/${type}-projects/${projectId}`;
+  };
+
+  const openPaymentDetails = (project) => {
+    setSelectedProject(project);
+    setShowPaymentDetails(true);
+  };
+
+  const closePaymentDetails = () => {
+    setSelectedProject(null);
+    setShowPaymentDetails(false);
   };
 
   return (
@@ -75,7 +112,9 @@ const ClosedProjects = () => {
                 <div className="project-header">
                   <h3>{project.title}</h3>
                   <div className="project-badges">
-                    <span className="project-type-badge">{project.type.toUpperCase()}</span>
+                    <span className="project-type-badge">
+                      {project.type.toUpperCase()}
+                    </span>
                     <span className="status-badge completed">Completed</span>
                   </div>
                 </div>
@@ -95,6 +134,10 @@ const ClosedProjects = () => {
                       <div className="detail-item">
                         <span className="detail-label">Category:</span>
                         <span>{project.category}</span>
+                      </div>
+                      <div className="detail-item">
+                        <span className="detail-label">Payment:</span>
+                        <span>₹{project.payment?.toLocaleString() || "N/A"}</span>
                       </div>
                     </>
                   ) : (
@@ -127,6 +170,22 @@ const ClosedProjects = () => {
                         : new Date(project.updatedAt).toLocaleDateString()}
                     </span>
                   </div>
+
+                  {project.paidAt && (
+                    <div className="detail-item payment-info">
+                      <span className="detail-label">Paid on:</span>
+                      <span>
+                        {new Date(project.paidAt).toLocaleDateString()}
+                      </span>
+                    </div>
+                  )}
+
+                  {project.paymentDetails && (
+                    <div className="detail-item payment-info">
+                      <span className="detail-label">Payment ID:</span>
+                      <span>{project.paymentDetails.razorpayPaymentId?.substring(0, 10)}...</span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="project-actions">
@@ -136,6 +195,15 @@ const ClosedProjects = () => {
                   >
                     View Details
                   </button>
+                  
+                  {project.paymentDetails && (
+                    <button
+                      className="action-button payment-details"
+                      onClick={() => openPaymentDetails(project)}
+                    >
+                      Payment Details
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
@@ -146,6 +214,69 @@ const ClosedProjects = () => {
           </div>
         )}
       </div>
+
+      {/* Payment Details Modal */}
+      {showPaymentDetails && selectedProject && (
+        <div className="modal-overlay" onClick={closePaymentDetails}>
+          <div className="payment-details-modal" onClick={(e) => e.stopPropagation()}>
+            <button className="modal-close-btn" onClick={closePaymentDetails}>×</button>
+            <h2>Payment Details</h2>
+            
+            <div className="payment-record">
+              <div className="payment-record-header">
+                <div className="payment-amount">₹{selectedProject.paymentDetails?.amount.toLocaleString()}</div>
+                <div className="payment-status">
+                  <span className="status-badge success">Completed</span>
+                </div>
+              </div>
+              
+              <div className="payment-record-details">
+                <div className="record-detail">
+                  <span className="detail-label">Project:</span>
+                  <span className="detail-value">{selectedProject.title}</span>
+                </div>
+                
+                <div className="record-detail">
+                  <span className="detail-label">Transaction ID:</span>
+                  <span className="detail-value">{selectedProject.paymentDetails?.razorpayPaymentId}</span>
+                </div>
+                
+                <div className="record-detail">
+                  <span className="detail-label">Payment Date:</span>
+                  <span className="detail-value">
+                    {selectedProject.paidAt ? new Date(selectedProject.paidAt).toLocaleString() : 
+                     selectedProject.paymentDetails?.updatedAt ? new Date(selectedProject.paymentDetails.updatedAt).toLocaleString() : "N/A"}
+                  </span>
+                </div>
+                
+                <div className="record-detail">
+                  <span className="detail-label">Paid By:</span>
+                  <span className="detail-value">{selectedProject.postedBy?.fullName || "Client"}</span>
+                </div>
+                
+                <div className="record-detail">
+                  <span className="detail-label">Paid To:</span>
+                  <span className="detail-value">{selectedProject.assignedTo?.fullName || "Worker"}</span>
+                </div>
+                
+                <div className="record-detail">
+                  <span className="detail-label">Payment Method:</span>
+                  <span className="detail-value">Razorpay</span>
+                </div>
+              </div>
+            </div>
+            
+            <div className="payment-actions">
+              <button 
+                className="download-invoice-btn"
+                onClick={() => window.open(`${baseUrl}/api/payments/${selectedProject.paymentDetails?._id}/invoice`, '_blank')}
+              >
+                Download Invoice
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -28,7 +28,6 @@ const ActiveGoProjects = () => {
       setLoading(true);
       setError(null);
 
-      // Fetch active projects (assigned but not completed)
       const response = await axios.get(
         `${baseUrl}/api/go-projects/active/${user._id}`,
         {
@@ -51,14 +50,12 @@ const ActiveGoProjects = () => {
     }
   };
 
-  // Step 1: Function to show the modal with the project ID
   const handleMarkCompleteClick = (projectId) => {
     setProjectToMark(projectId);
     setShowConfirmModal(true);
   };
 
-  // Step 2: Function to handle the confirmation
-  const handleConfirmMarkComplete = async () => {
+    const handleConfirmMarkComplete = async () => {
     if (!projectToMark) return;
     
     try {
@@ -73,7 +70,6 @@ const ActiveGoProjects = () => {
         }
       );
 
-      // Update the project status locally
       setProjects((prev) =>
         prev.map((project) =>
           project._id === projectToMark
@@ -82,11 +78,9 @@ const ActiveGoProjects = () => {
         )
       );
       
-      // Show success message
       setSuccessMessage("Marked as complete! Waiting for client confirmation.");
       setTimeout(() => setSuccessMessage(""), 3000);
       
-      // Close modal
       setShowConfirmModal(false);
       setProjectToMark(null);
     } catch (error) {
@@ -97,10 +91,11 @@ const ActiveGoProjects = () => {
     }
   };
 
-  // Function to navigate to project details
-  const viewProjectDetails = (projectId) => {
-    window.location.href = `/go-projects/${projectId}`;
-  };
+const viewProjectDetails = (projectId) => {
+  const authToken = localStorage.getItem("authToken");
+  sessionStorage.setItem("authToken", authToken);
+  window.location.href = `/go-projects/${projectId}`;
+};
 
   return (
     <div className="active-go-projects-page">
@@ -211,7 +206,6 @@ const ActiveGoProjects = () => {
         )}
       </div>
 
-      {/* Confirmation Modal */}
       <ConfirmModal
         open={showConfirmModal}
         onClose={() => {

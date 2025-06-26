@@ -37,12 +37,14 @@ const proProjectRoutes = require('./Routes/proProjectRoutes');
 const Auth = require('./Routes/authRoutes');
 const allProjects = require('./Routes/allProjects');
 const chatRoutes = require('./Routes/chatRoutes');
+const paymentRoutes = require('./Routes/paymentRoutes')
 
 app.use('/api/go-projects', goProjectRoutes);
 app.use('/api/pro-projects', proProjectRoutes);
 app.use('/api/projects', allProjects);
 app.use('/api/auth', Auth);
 app.use('/api/chats', chatRoutes);
+app.use('/api/payments', paymentRoutes)
 
 app.get('/', (req, res) => {
   res.json('This is Home Route');
