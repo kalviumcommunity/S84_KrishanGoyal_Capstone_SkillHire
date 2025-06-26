@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
-import '../Styles/PaymentProcessor.css';
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import "../Styles/PaymentProcessor.css";
 
 const PaymentProcessor = ({ projectId, projectType, onClose, onSuccess }) => {
   const [loading, setLoading] = useState(true);
@@ -28,15 +28,17 @@ const PaymentProcessor = ({ projectId, projectType, onClose, onSuccess }) => {
         );
 
         setOrderData(response.data);
-        
+
         // Only initialize Razorpay if we got valid data
         if (response.data && response.data.order && response.data.key) {
           initializeRazorpay(response.data);
         } else {
-          setError('Invalid payment data received from server');
+          setError("Invalid payment data received from server");
         }
       } catch (error) {
-        setError(error.response?.data?.error || 'Failed to create payment order');
+        setError(
+          error.response?.data?.error || "Failed to create payment order"
+        );
       } finally {
         setLoading(false);
       }
@@ -45,15 +47,15 @@ const PaymentProcessor = ({ projectId, projectType, onClose, onSuccess }) => {
     fetchPaymentOrder();
   }, [projectId, projectType, baseUrl]);
 
+  // ...existing code...
   const initializeRazorpay = (data) => {
     if (!data || !data.order || !data.key) {
       return;
     }
 
-    // Store payment ID in a safer place
     const paymentId = data.payment?.id;
     if (!paymentId) {
-      setError('Payment initialization failed: Missing payment ID');
+      setError("Payment initialization failed: Missing payment ID");
       return;
     }
 
@@ -62,23 +64,27 @@ const PaymentProcessor = ({ projectId, projectType, onClose, onSuccess }) => {
       amount: data.order.amount,
       currency: data.order.currency,
       name: "SkillHire",
-      description: `Payment for ${data.project?.title || 'Project'}`,
+      description: `Payment for ${data.project?.title || "Project"}`,
       order_id: data.order.id,
       prefill: {
-        name: data.client?.name || '',
-        email: data.client?.email || '',
+        name: data.client?.name || "",
+        email: data.client?.email || "",
       },
       handler: function (response) {
-        // Pass the stored paymentId instead of relying on orderData
         handlePaymentSuccess(response, paymentId);
       },
       modal: {
-        ondismiss: function() {
+        ondismiss: function () {
           onClose();
-        }
+        },
       },
       theme: {
         color: "#0366d6",
+      },
+      config: {
+        display: {
+          language: "en",
+        },
       },
     };
 
@@ -89,13 +95,12 @@ const PaymentProcessor = ({ projectId, projectType, onClose, onSuccess }) => {
   const handlePaymentSuccess = async (response, paymentId) => {
     try {
       setLoading(true);
-      
+
       if (!paymentId) {
-        setError('Payment verification failed: Missing payment ID');
+        setError("Payment verification failed: Missing payment ID");
         return;
       }
-      
-      
+
       // Verify the payment on the server
       const verifyResponse = await axios.post(
         `${baseUrl}/api/payments/verify`,
@@ -112,8 +117,7 @@ const PaymentProcessor = ({ projectId, projectType, onClose, onSuccess }) => {
           withCredentials: true,
         }
       );
-      
-      
+
       if (verifyResponse.data.success) {
         if (onSuccess) {
           onSuccess(verifyResponse.data);
@@ -122,15 +126,17 @@ const PaymentProcessor = ({ projectId, projectType, onClose, onSuccess }) => {
         }
       }
     } catch (error) {
-      console.error('Payment verification failed:', error);
-      setError(error.response?.data?.error || 'Payment verification failed');
+      console.error("Payment verification failed:", error);
+      setError(error.response?.data?.error || "Payment verification failed");
     } finally {
       setLoading(false);
     }
   };
 
   if (loading && !orderData) {
-    return <div className="payment-processor-loading">Setting up payment...</div>;
+    return (
+      <div className="payment-processor-loading">Setting up payment...</div>
+    );
   }
 
   if (error) {
@@ -149,7 +155,9 @@ const PaymentProcessor = ({ projectId, projectType, onClose, onSuccess }) => {
         <h3>Processing Payment</h3>
         <p>Please complete the payment in the Razorpay window.</p>
         <p>Amount: ₹{orderData?.payment?.amount}</p>
-        <button onClick={onClose} className="cancel-payment-btn">Cancel Payment</button>
+        <button onClick={onClose} className="cancel-payment-btn">
+          Cancel Payment
+        </button>
       </div>
     </div>
   );
